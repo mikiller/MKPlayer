@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/mask"
+    android:gravity="bottom">
+
+    <LinearLayout
+        android:id="@+id/ll_dlg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@android:color/white">
+
+        <TextView
+            android:id="@+id/tv_dlg_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:padding="10dp"
+            android:textSize="18sp"
+            android:textColor="@color/text_color_black" />
+
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/hintTxt" />
+
+        <Button
+            android:id="@+id/btn_1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="选项1"
+            android:textSize="16sp"
+            android:padding="10dp"
+            android:gravity="center"
+            android:background="@drawable/selector_menuitem"/>
+
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/hintTxt" />
+        <Button
+            android:id="@+id/btn_2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="选项2"
+            android:textSize="16sp"
+            android:padding="10dp"
+            android:gravity="center"
+            android:background="@drawable/selector_menuitem"/>
+
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/hintTxt" />
+
+        <Button
+            android:id="@+id/btn_3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="选项3"
+            android:textSize="16sp"
+            android:padding="10dp"
+            android:gravity="center"
+            android:background="@drawable/selector_menuitem"
+            />
+
+        <View android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/hintTxt"
+            android:layout_marginBottom="10dp" />
+    </LinearLayout>
+
+</LinearLayout>

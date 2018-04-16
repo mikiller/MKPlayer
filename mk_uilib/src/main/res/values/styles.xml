@@ -1,0 +1,80 @@
+<resources>
+    <style name="icon_style">
+        <item name="android:layout_width">@dimen/icon_height</item>
+        <item name="android:layout_height">@dimen/icon_height</item>
+        <item name="android:layout_marginTop">@dimen/icon_margin</item>
+        <item name="android:layout_marginBottom">@dimen/icon_margin</item>
+        <item name="android:layout_marginRight">@dimen/icon_margin</item>
+        <item name="android:contentDescription">null</item>
+        <item name="android:button">@null</item>
+    </style>
+    
+    <style name="progressbar_horizontal">
+        <item name="android:indeterminateOnly">false</item>
+        <item name="android:progressDrawable">@drawable/progressbar_horizontal</item>
+        <item name="android:indeterminateDrawable">@android:drawable/progress_indeterminate_horizontal</item>
+        <item name="android:minHeight">4dp</item>
+        <item name="android:maxHeight">10dp</item>
+    </style>
+
+    <style name="tag_text_blue">
+        <item name="android:textColor">@color/tagTextBlue</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:gravity">center</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:layout_marginLeft">10dp</item>
+        <item name="android:layout_marginRight">10dp</item>
+    </style>
+
+    <style name="gallery_tab">
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/selector_gallery_txt</item>
+        <item name="android:background">@drawable/selector_gallery_tab</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:button">@null</item>
+    </style>
+
+    <style name="CustomDialog" parent="@android:style/Theme.Dialog">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <!-- 背景颜色及透明程度 -->
+        <item name="android:windowBackground">@color/mask</item>
+        <!-- 是否有标题 -->
+        <item name="android:windowNoTitle">true</item>
+        <!-- 是否浮现在activity之上 -->
+        <item name="android:windowIsFloating">false</item>
+        <!-- 是否模糊 -->
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+
+    <style name="sliptline">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/tagBgGray</item>
+    </style>
+
+    <style name="nomal_text_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <style name="hint_text_style">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/discovery_kind_unchecked</item>
+    </style>
+
+    <style name="dlg_anim">
+        <item name="android:windowEnterAnimation">@anim/dlg_enter</item>
+        <item name="android:windowExitAnimation">@anim/dlg_exit</item>
+    </style>
+</resources>

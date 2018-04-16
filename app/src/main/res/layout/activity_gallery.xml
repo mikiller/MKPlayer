@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gal="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="false">
+
+    <com.uilib.mxgallery.widgets.MXGallery
+        android:id="@+id/gallery"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/titleBar"
+        android:background="@android:color/white"
+        gal:columnNum="3"
+        gal:itemMargin="6dp"
+        gal:needTab="false" />
+
+    <include layout="@layout/layout_popwindow"
+        android:id="@+id/fl_pop"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/titleBar"
+        android:visibility="gone"/>
+
+    <com.uilib.titlebar.TitleBar xmlns:title="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/titleBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        title:backStyle="FORK"
+        title:titleStyle="MENU" />
+</RelativeLayout>
