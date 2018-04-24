@@ -75,7 +75,7 @@
         <!--</activity>-->
 
         <!--<service-->
-            <!--android:name="tv.danmaku.ijk.media.example.services.MediaPlayerService"-->
+            <!--android:natv.danmaku.ijk.media.viewlib.servicesices.MediaPlayerService"-->
             <!--android:enabled="false"-->
             <!--android:exported="false"-->
             <!--android:icon="@mipmap/ic_launcher"-->

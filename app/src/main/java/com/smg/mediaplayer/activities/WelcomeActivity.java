@@ -17,9 +17,8 @@ import java.io.File;
 import java.util.List;
 
 import butterknife.BindView;
-import tv.danmaku.ijk.media.example.widget.media.AndroidMediaController;
-import tv.danmaku.ijk.media.example.widget.media.IjkVideoView;
-import tv.danmaku.ijk.media.example.widget.media.MXVideoView;
+import tv.danmaku.ijk.media.viewlib.widget.media.AndroidMediaController;
+import tv.danmaku.ijk.media.viewlib.widget.media.MXVideoView;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class WelcomeActivity extends BaseActivity {
@@ -41,7 +40,7 @@ public class WelcomeActivity extends BaseActivity {
 
     @Override
     protected void initView() {
-        mediaController = new AndroidMediaController(this, false);
+        mediaController = new AndroidMediaController(this, true);
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         video.setMediaController(mediaController);

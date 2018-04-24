@@ -22,11 +22,11 @@
         android:background="#88000000"
         android:scaleType="centerCrop"/>
 
-    <tv.danmaku.ijk.media.example.widget.media.MXVideoView
+    <tv.danmaku.ijk.media.viewlib.widget.media.MXVideoView
         android:id="@+id/video"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-       android:layout_above="@+id/table"/>
+        android:layout_above="@+id/table"/>
 
     <TableLayout
         android:id="@+id/table"
