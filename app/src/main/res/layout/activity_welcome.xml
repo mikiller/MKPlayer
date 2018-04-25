@@ -22,8 +22,15 @@
         <!--android:background="#88000000"-->
         <!--android:scaleType="centerCrop"/>-->
 
-    <tv.danmaku.ijk.media.viewlib.widget.media.MXVideoView
-        android:id="@+id/video"
+    <!--<com.mikiller.mkplayerlib.MKVideoView-->
+        <!--android:id="@+id/video"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="200dp"-->
+        <!--android:layout_above="@+id/table"-->
+        <!--android:translationZ="50dp"-->
+        <!--android:background="@android:color/black"/>-->
+    <com.mikiller.mkplayerlib.MKPlayer
+        android:id="@+id/videoPlayer"
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:layout_above="@+id/table"

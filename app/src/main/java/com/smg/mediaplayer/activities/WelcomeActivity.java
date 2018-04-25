@@ -6,30 +6,28 @@ import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TableLayout;
 
-import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
+import com.mikiller.mkplayerlib.MKPlayer;
+import com.mikiller.mkplayerlib.MKVideoView;
 import com.smg.mediaplayer.R;
 import com.smg.mediaplayer.base.BaseActivity;
+import com.smg.mediaplayer.widgets.AndroidMediaController;
 import com.uilib.mxgallery.utils.GalleryMediaUtils;
 import com.uilib.mxgallery.widgets.MXGallery;
+import com.uilib.utils.DisplayUtil;
 
 import java.io.File;
 import java.util.List;
 
 import butterknife.BindView;
-import tv.danmaku.ijk.media.viewlib.utils.WindowUtil;
-import tv.danmaku.ijk.media.viewlib.widget.media.AndroidMediaController;
-import tv.danmaku.ijk.media.viewlib.widget.media.MXVideoView;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
 public class WelcomeActivity extends BaseActivity {
 
 //    private ImageView iv_preview;
     private Button btn_gallery;
-    @BindView(R.id.video)
-    MXVideoView video;
+    @BindView(R.id.videoPlayer)
+    MKPlayer video;
 //    @BindView(R.id.table)
 //    TableLayout tab;
     private AndroidMediaController mediaController;
@@ -43,23 +41,23 @@ public class WelcomeActivity extends BaseActivity {
 
     @Override
     protected void initView() {
-        mediaController = new AndroidMediaController(this, true);
-        mediaController.setFullScreenListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleFullScreen();
-                video.toggleMediaControlsVisiblity();
-            }
-        });
-        IjkMediaPlayer.loadLibrariesOnce(null);
-        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        video.setMediaController(mediaController);
-        video.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                video.toggleMediaControlsVisiblity();
-            }
-        });
+//        mediaController = new AndroidMediaController(this, true);
+//        mediaController.setFullScreenListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                toggleFullScreen();
+//                video.toggleMediaControlsVisiblity();
+//            }
+//        });
+//        IjkMediaPlayer.loadLibrariesOnce(null);
+//        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
+        video.setMediaController(new AndroidMediaController(this, true));
+//        video.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                video.toggleMediaControlsVisiblity();
+//            }
+//        });
         //video.setHudView(tab);
 
 
@@ -82,7 +80,7 @@ public class WelcomeActivity extends BaseActivity {
      * 全屏切换，点击全屏按钮
      */
     private void toggleFullScreen() {
-        if (WindowUtil.getScreenOrientation(this) != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+        if (DisplayUtil.getScreenOrientation(this) != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         } else {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
@@ -113,7 +111,7 @@ public class WelcomeActivity extends BaseActivity {
                     //GlideImageLoader.getInstance().loadLocalImage(this, GalleryMediaUtils.getInstance().getFileUri(tmpFile),R.mipmap.placeholder, iv_preview);
                 }else if(fileList != null && fileList.size() > 0){
                     //video.stopPlayback();
-                    video.setVideoURI(GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)));
+                    video.setVideoUri(GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)));
                     //video.start();
                 }
 //                    GlideImageLoader.getInstance().loadLocalImage(this, GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)),R.mipmap.placeholder, iv_preview);
@@ -131,6 +129,6 @@ public class WelcomeActivity extends BaseActivity {
     protected void onStop() {
         super.onStop();
         video.stopPlayback();
-        IjkMediaPlayer.native_profileEnd();
+
     }
 }

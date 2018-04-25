@@ -48,7 +48,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.jakewharton:butterknife:8.7.0'
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
-    implementation project(':mk_uilib')
     implementation project(':mkokhttp')
-    implementation project(':ijkplayer-example')
+    implementation project(':mkplayerlib')
 }
