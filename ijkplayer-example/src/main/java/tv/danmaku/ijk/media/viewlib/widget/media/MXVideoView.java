@@ -1,8 +1,10 @@
 package tv.danmaku.ijk.media.viewlib.widget.media;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -17,8 +19,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.MediaController;
+import android.widget.RelativeLayout;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,6 +95,9 @@ public class MXVideoView extends FrameLayout implements MediaController.MediaPla
     private IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangeListener;
     private IMediaPlayer.OnBufferingUpdateListener mOnBufferUpdateListener;
 
+    private int mScreenUiVisibility;
+    private int fullHeight;
+    private ViewGroup.LayoutParams originLp;
     private int mVideoWidth;
     private int mVideoHeight;
     private int mSurfaceWidth;
@@ -673,14 +682,57 @@ public class MXVideoView extends FrameLayout implements MediaController.MediaPla
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent ev) {
-        if (isInPlaybackState() && mMediaController != null) {
-            toggleMediaControlsVisiblity();
+    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+        super.onLayout(changed, left, top, right, bottom);
+        if(fullHeight == 0){
+            originLp = getLayoutParams();
+            fullHeight = ((Activity)getContext()).getWindowManager().getDefaultDisplay().getHeight();
         }
-        return false;
     }
 
-    private void toggleMediaControlsVisiblity() {
+    public void configurationChanged(Configuration newConfig) {
+        if (Build.VERSION.SDK_INT >= 14) {
+            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                // 获取关联 Activity 的 DecorView
+                View decorView = ((Activity)getContext()).getWindow().getDecorView();
+                // 保存旧的配置
+                mScreenUiVisibility = decorView.getSystemUiVisibility();
+                // 沉浸式使用这些Flag
+                decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                        View.SYSTEM_UI_FLAG_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                );
+                ((Activity)getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                setFullScreen(true);
+            } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                View decorView = ((Activity)getContext()).getWindow().getDecorView();
+                // 还原
+                decorView.setSystemUiVisibility(mScreenUiVisibility);
+                ((Activity)getContext()).getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                setFullScreen(false);
+            }
+        }
+    }
+
+    private void setFullScreen(boolean isFull){
+        changeViewHeight(isFull);
+        mMediaController.onFullScreen(isFull);
+    }
+
+    private void changeViewHeight(boolean isFull){
+        if(isFull) {
+            RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+            setLayoutParams(lp);
+        }else
+            setLayoutParams(originLp);
+    }
+
+    public void toggleMediaControlsVisiblity() {
+        if(!isInPlaybackState() || mMediaController == null)
+            return;
         if (mMediaController.isShowing()) {
             Log.e(TAG, "hide controller in togglevisiblity");
             mMediaController.hide();

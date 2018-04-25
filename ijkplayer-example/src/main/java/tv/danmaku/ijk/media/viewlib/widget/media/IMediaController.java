@@ -17,6 +17,7 @@
 
 package tv.danmaku.ijk.media.viewlib.widget.media;
 
+import android.content.res.Configuration;
 import android.view.View;
 import android.widget.MediaController;
 
@@ -39,4 +40,6 @@ public interface IMediaController {
     // Extends
     //----------
     void showOnce(View view);
+
+    void onFullScreen(boolean isFull);
 }

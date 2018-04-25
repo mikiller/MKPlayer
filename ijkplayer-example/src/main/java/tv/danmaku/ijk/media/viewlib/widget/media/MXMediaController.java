@@ -1,9 +1,14 @@
 package tv.danmaku.ijk.media.viewlib.widget.media;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
+import android.os.Build;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
@@ -32,12 +37,13 @@ import java.util.Locale;
 import java.util.Timer;
 
 import tv.danmaku.ijk.media.example.R;
+import tv.danmaku.ijk.media.viewlib.utils.WindowUtil;
 
 /**
  * Created by Mikiller on 2018/4/24.
  */
 
-public class MXMediaController extends FrameLayout implements IMediaController {
+public class MXMediaController extends FrameLayout implements IMediaController, View.OnClickListener {
     private final String TAG = this.getClass().getSimpleName();
     private MediaController.MediaPlayerControl mPlayer;
     private final Context mContext;
@@ -51,21 +57,24 @@ public class MXMediaController extends FrameLayout implements IMediaController {
     private TextView tv_duration, tv_playTime;
     private boolean mShowing;
     private boolean mDragging;
+    private boolean isFullScreen;
     private static final int sDefaultTimeout = 3000;
     private final boolean mUseFastForward;
 //    private boolean mFromXml;
     private boolean mListenersSet;
-    private View.OnClickListener mNextListener, mPrevListener;
+
     StringBuilder mFormatBuilder;
     Formatter mFormatter;
-    private CheckBox btn_bigPlay, btn_play;
+    private ImageButton btn_bigPlay;
+    private ImageButton btn_fullScreen;
+    private ImageButton btn_play;
     private ImageButton btn_fwd;
     private ImageButton btn_rew;
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
-    private Timer timer;
 //    private CharSequence mPlayDescription;
 //    private CharSequence mPauseDescription;
+    private View.OnClickListener mNextListener, mPrevListener, mFullScreenListener;
 
     private final OnLayoutChangeListener mLayoutChangeListener =
             new OnLayoutChangeListener() {
@@ -79,18 +88,6 @@ public class MXMediaController extends FrameLayout implements IMediaController {
                     }
                 }
             };
-
-    private final OnTouchListener mTouchListener = new OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                if (mShowing) {
-                    hide();
-                }
-            }
-            return false;
-        }
-    };
 
     private final Runnable mFadeOut = new Runnable() {
         @Override
@@ -106,14 +103,6 @@ public class MXMediaController extends FrameLayout implements IMediaController {
             if (!mDragging && mShowing && mPlayer.isPlaying()) {
                 postDelayed(mShowProgress, 1000 - (pos % 1000));
             }
-        }
-    };
-
-    private final OnClickListener mPauseListener = new OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            doPauseResume();
-            show(sDefaultTimeout);
         }
     };
 
@@ -151,37 +140,13 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         public void onStopTrackingTouch(SeekBar bar) {
             mDragging = false;
             setProgress();
-            updatePausePlay();
+//            updatePausePlay();
             show(sDefaultTimeout);
 
             // Ensure that progress is properly updated in the future,
             // the call to show() does not guarantee this because it is a
             // no-op if we are already showing.
             post(mShowProgress);
-        }
-    };
-
-    private final View.OnClickListener mRewListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            int pos = mPlayer.getCurrentPosition();
-            pos -= 5000; // milliseconds
-            mPlayer.seekTo(pos);
-            setProgress();
-
-            show(sDefaultTimeout);
-        }
-    };
-
-    private final View.OnClickListener mFfwdListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            int pos = mPlayer.getCurrentPosition();
-            pos += 15000; // milliseconds
-            mPlayer.seekTo(pos);
-            setProgress();
-
-            show(sDefaultTimeout);
         }
     };
 
@@ -232,7 +197,17 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         mWindow.setWindowManager(mWindowManager, null, null);
         mWindow.requestFeature(Window.FEATURE_NO_TITLE);
         mDecor = mWindow.getDecorView();
-        mDecor.setOnTouchListener(mTouchListener);
+        mDecor.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                    if (mShowing) {
+                        hide();
+                    }
+                }
+                return false;
+            }
+        });
         mWindow.setContentView(this);
         mWindow.setBackgroundDrawableResource(android.R.color.transparent);
 
@@ -250,7 +225,7 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         mDecorLayoutParams = new WindowManager.LayoutParams();
         WindowManager.LayoutParams p = mDecorLayoutParams;
         p.gravity = Gravity.TOP | Gravity.LEFT;
-        p.height = LayoutParams.WRAP_CONTENT;
+        //p.height = LayoutParams.WRAP_CONTENT;
         p.x = 0;
         p.format = PixelFormat.TRANSLUCENT;
         p.type = WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
@@ -269,12 +244,12 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         // within its space
         mDecor.measure(MeasureSpec.makeMeasureSpec(mAnchor.getWidth(), MeasureSpec.AT_MOST),
                 MeasureSpec.makeMeasureSpec(mAnchor.getHeight(), MeasureSpec.AT_MOST));
-        mRoot.getLayoutParams().height = mAnchor.getMeasuredHeight();
+        mRoot.getLayoutParams().height = mAnchor.getHeight();
         WindowManager.LayoutParams p = mDecorLayoutParams;
         p.width = mAnchor.getWidth();
+        p.height = mAnchor.getHeight();
         p.x = anchorPos[0] + (mAnchor.getWidth() - p.width) / 2;
         p.y = anchorPos[1] + mAnchor.getHeight() - mDecor.getMeasuredHeight();
-
     }
 
     @Override
@@ -309,26 +284,21 @@ public class MXMediaController extends FrameLayout implements IMediaController {
             mAnchor.addOnLayoutChangeListener(mLayoutChangeListener);
         }
 
-        FrameLayout.LayoutParams frameParams = new FrameLayout.LayoutParams(
+        removeAllViews();
+        LayoutInflater inflate = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mRoot = inflate.inflate(getControllerRes(), null);
+        initControllerView(mRoot);
+        addView(mRoot, new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
-        );
-
-        removeAllViews();
-        View v = makeControllerView();
-        addView(v, frameParams);
+        ));
     }
 
-    protected View makeControllerView() {
-        LayoutInflater inflate = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        mRoot = inflate.inflate(R.layout.media_controller, null);
-
-        initControllerView(mRoot);
-
-        return mRoot;
+    protected int getControllerRes() {
+        return  R.layout.media_controller;
     }
 
-    private void initControllerView(View v) {
+    protected void initControllerView(View v) {
 //        Resources res = mContext.getResources();
 //        mPlayDescription = res
 //                .getText(com.android.internal.R.string.lockscreen_transport_play_description);
@@ -337,17 +307,17 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         btn_bigPlay = v.findViewById(R.id.btn_bigPlay);
         if (btn_bigPlay != null) {
             btn_bigPlay.requestFocus();
-            btn_bigPlay.setOnClickListener(mPauseListener);
+            btn_bigPlay.setOnClickListener(this);
         }
         btn_play = v.findViewById(R.id.btn_play);
         if (btn_play != null) {
             btn_play.requestFocus();
-            btn_play.setOnClickListener(mPauseListener);
+            btn_play.setOnClickListener(this);
         }
 
         btn_fwd = v.findViewById(R.id.btn_fwd);
         if (btn_fwd != null) {
-            btn_fwd.setOnClickListener(mFfwdListener);
+            btn_fwd.setOnClickListener(this);
 //            if (!mFromXml) {
             btn_fwd.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
 //            }
@@ -355,7 +325,7 @@ public class MXMediaController extends FrameLayout implements IMediaController {
 
         btn_rew = v.findViewById(R.id.btn_rew);
         if (btn_rew != null) {
-            btn_rew.setOnClickListener(mRewListener);
+            btn_rew.setOnClickListener(this);
 //            if (!mFromXml) {
             btn_rew.setVisibility(mUseFastForward ? View.VISIBLE : View.GONE);
 //            }
@@ -369,6 +339,11 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         //mPrevButton = v.findViewById(com.android.internal.R.id.prev);
         if (mPrevButton != null && !mListenersSet) {
             mPrevButton.setVisibility(View.GONE);
+        }
+
+        btn_fullScreen = v.findViewById(R.id.btn_fullScreen);
+        if(btn_fullScreen != null){
+            btn_fullScreen.setOnClickListener(mFullScreenListener);
         }
 
         mProgress = v.findViewById(R.id.progress);
@@ -403,7 +378,7 @@ public class MXMediaController extends FrameLayout implements IMediaController {
     @Override
     public void setMediaPlayer(MediaController.MediaPlayerControl player) {
         mPlayer = player;
-        updatePausePlay();
+        updatePausePlay(mPlayer.isPlaying());
     }
 
     @Override
@@ -418,8 +393,8 @@ public class MXMediaController extends FrameLayout implements IMediaController {
             mWindowManager.addView(mDecor, mDecorLayoutParams);
             mShowing = true;
         }
-        updatePausePlay();
-
+        updatePausePlay(mPlayer.isPlaying());
+        onFullScreen(isFullScreen);
         // cause the progress bar to be updated even if mShowing
         // was already true.  This happens, for example, if we're
         // paused with the progress bar showing the user hits play.
@@ -487,22 +462,23 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         }
     }
 
-    private void updatePausePlay() {
+    private void updatePausePlay(boolean isPlay) {
         if (mRoot == null || btn_play == null)
             return;
-
-        btn_play.setChecked(mPlayer.isPlaying());
+        btn_play.setSelected(isPlay);
         if (btn_bigPlay != null)
-            btn_bigPlay.setChecked(mPlayer.isPlaying());
+            btn_bigPlay.setSelected(isPlay);
     }
 
     private void doPauseResume() {
         if (mPlayer.isPlaying()) {
             mPlayer.pause();
+            updatePausePlay(false);
         } else {
             mPlayer.start();
+            updatePausePlay(true);
         }
-        updatePausePlay();
+
     }
 
     @Override
@@ -525,6 +501,20 @@ public class MXMediaController extends FrameLayout implements IMediaController {
                 mPrevButton.setVisibility(View.VISIBLE);
             }
         }
+    }
+
+    public void setFullScreenListener(OnClickListener fullScreenListener){
+        mFullScreenListener = fullScreenListener;
+        if(mRoot != null){
+            btn_fullScreen.setOnClickListener(mFullScreenListener);
+        }
+    }
+
+    @Override
+    public void onFullScreen(boolean isFull) {
+        isFullScreen = isFull;
+        if(btn_fullScreen != null)
+            btn_fullScreen.setSelected(isFull);
     }
 
     private String stringForTime(int timeMs) {
@@ -570,27 +560,35 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         if (mProgress != null) {
             mProgress.setEnabled(enabled);
         }
+        if(btn_fullScreen != null)
+            btn_fullScreen.setEnabled(enabled && mFullScreenListener != null);
         disableUnsupportedButtons();
         super.setEnabled(enabled);
     }
 
-//    @Override
-//    public boolean onTouchEvent(MotionEvent event) {
-//        switch (event.getAction()) {
-//            case MotionEvent.ACTION_DOWN:
-//                show(0); // show until hide is called
-//                break;
-//            case MotionEvent.ACTION_UP:
-//                show(sDefaultTimeout); // start timeout
-//                break;
-//            case MotionEvent.ACTION_CANCEL:
-//                hide();
-//                break;
-//            default:
-//                break;
-//        }
-//        return true;
-//    }
+    @Override
+    public void onClick(View v) {
+        if(v.getId() == R.id.btn_bigPlay || v.getId() == R.id.btn_play){
+            show(sDefaultTimeout);
+            doPauseResume();
+        }else if(v.getId() == R.id.btn_rew){
+            int pos = mPlayer.getCurrentPosition();
+            pos -= 5000; // milliseconds
+            mPlayer.seekTo(pos);
+            setProgress();
+
+            show(sDefaultTimeout);
+        }else if(v.getId() == R.id.btn_fwd){
+            int pos = mPlayer.getCurrentPosition();
+            pos += 15000; // milliseconds
+            mPlayer.seekTo(pos);
+            setProgress();
+
+            show(sDefaultTimeout);
+        }else if(v.getId() == R.id.btn_fullScreen){
+
+        }
+    }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -601,8 +599,8 @@ public class MXMediaController extends FrameLayout implements IMediaController {
                 || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
                 || keyCode == KeyEvent.KEYCODE_SPACE) {
             if (uniqueDown) {
-                doPauseResume();
                 show(sDefaultTimeout);
+                doPauseResume();
                 if (btn_play != null) {
                     btn_play.requestFocus();
                 }
@@ -611,7 +609,7 @@ public class MXMediaController extends FrameLayout implements IMediaController {
         } else if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY) {
             if (uniqueDown && !mPlayer.isPlaying()) {
                 mPlayer.start();
-                updatePausePlay();
+                updatePausePlay(true);
                 show(sDefaultTimeout);
             }
             return true;
@@ -619,7 +617,7 @@ public class MXMediaController extends FrameLayout implements IMediaController {
                 || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE) {
             if (uniqueDown && mPlayer.isPlaying()) {
                 mPlayer.pause();
-                updatePausePlay();
+                updatePausePlay(false);
                 show(sDefaultTimeout);
             }
             return true;
@@ -644,4 +642,5 @@ public class MXMediaController extends FrameLayout implements IMediaController {
     public CharSequence getAccessibilityClassName() {
         return MXMediaController.class.getName();
     }
+
 }

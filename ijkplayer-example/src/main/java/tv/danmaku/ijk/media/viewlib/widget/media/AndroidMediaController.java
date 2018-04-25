@@ -23,12 +23,18 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 
 import java.util.ArrayList;
 
+import tv.danmaku.ijk.media.example.R;
+
 public class AndroidMediaController extends MXMediaController implements IMediaController {
-    private ActionBar mActionBar;
+    private LinearLayout ll_controllerTop;
+    private ImageButton btn_return;
+    private ImageButton btn_setting;
 
     public AndroidMediaController(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -48,29 +54,34 @@ public class AndroidMediaController extends MXMediaController implements IMediaC
     private void initView(Context context) {
     }
 
+    @Override
+    protected int getControllerRes() {
+        return R.layout.custom_media_controller;
+    }
 
+    @Override
+    protected void initControllerView(View v) {
+        super.initControllerView(v);
+        ll_controllerTop = v.findViewById(R.id.ll_controllerTop);
+        btn_return = v.findViewById(R.id.btn_return);
+        btn_setting = v.findViewById(R.id.btn_setting);
+    }
 
-    public void setSupportActionBar(@Nullable ActionBar actionBar) {
-        mActionBar = actionBar;
-        if (isShowing()) {
-            actionBar.show();
-        } else {
-            actionBar.hide();
-        }
+    @Override
+    public void onFullScreen(boolean isFull) {
+        super.onFullScreen(isFull);
+        if(ll_controllerTop != null)
+            ll_controllerTop.setVisibility(isFull ? VISIBLE : GONE);
     }
 
     @Override
     public void show() {
         super.show();
-        if (mActionBar != null)
-            mActionBar.show();
     }
 
     @Override
     public void hide() {
         super.hide();
-        if (mActionBar != null)
-            mActionBar.hide();
         for (View view : mShowOnceArray)
             view.setVisibility(View.GONE);
         mShowOnceArray.clear();

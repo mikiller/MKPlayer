@@ -4,29 +4,31 @@
     android:id="@+id/activity_welcome"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
+    android:fitsSystemWindows="false"
     tools:context="com.smg.mediaplayer.activities.WelcomeActivity">
 
-    <TextView
-        android:id="@+id/hello"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!" />
+    <!--<TextView-->
+        <!--android:id="@+id/hello"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="Hello World!" />-->
 
-    <ImageView
-        android:id="@+id/iv_preview"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/hello"
-        android:layout_above="@+id/btn_gallery"
-        android:background="#88000000"
-        android:scaleType="centerCrop"/>
+    <!--<ImageView-->
+        <!--android:id="@+id/iv_preview"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_below="@id/hello"-->
+        <!--android:layout_above="@+id/btn_gallery"-->
+        <!--android:background="#88000000"-->
+        <!--android:scaleType="centerCrop"/>-->
 
     <tv.danmaku.ijk.media.viewlib.widget.media.MXVideoView
         android:id="@+id/video"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/table"/>
+        android:layout_height="200dp"
+        android:layout_above="@+id/table"
+        android:translationZ="50dp"
+        android:background="@android:color/black"/>
 
     <TableLayout
         android:id="@+id/table"
