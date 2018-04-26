@@ -31,7 +31,7 @@ public abstract class BaseLogic<T> extends Callback<T> {
     /**
      * 接口地址统一ip
      */
-    private String hostIp = "";
+    private String hostIp = "https://as.dun.163yun.com/v3/";
     /**
      * 具体接口名称<br>
      * 由子类实现{@link #setUrl()}设置

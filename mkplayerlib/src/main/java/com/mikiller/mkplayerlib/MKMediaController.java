@@ -48,7 +48,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     private boolean isFullScreen;
     private static final int sDefaultTimeout = 3000;
     private final boolean mUseFastForward;
-//    private boolean mFromXml;
+    //    private boolean mFromXml;
     private boolean mListenersSet;
 
     StringBuilder mFormatBuilder;
@@ -59,7 +59,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     private ImageButton btn_rew;
     private ImageButton mNextButton;
     private ImageButton mPrevButton;
-//    private CharSequence mPlayDescription;
+    //    private CharSequence mPlayDescription;
 //    private CharSequence mPauseDescription;
     private View.OnClickListener mNextListener, mPrevListener, mFullScreenListener;
 
@@ -166,34 +166,49 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 
     private void initFloatingWindow() {
         mWindowManager = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+        Class clazz = null;
         try {
-            Class clazz = Class.forName("com.android.internal.policy.PolicyManager");
-            Method method = clazz.getDeclaredMethod("makeNewWindow", Context.class);
-            mWindow = (Window) method.invoke(null, getContext());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }  catch (NoSuchMethodException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            try {
+                clazz = Class.forName("com.android.internal.policy.PolicyManager");
+                Method method = clazz.getDeclaredMethod("makeNewWindow", Context.class);
+                mWindow = (Window) method.invoke(null, getContext());
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                try {
+                    clazz = Class.forName("com.android.internal.policy.PhoneWindow");
+                    mWindow = (Window) clazz.getDeclaredConstructor(Context.class).newInstance(mContext);
+                } catch (ClassNotFoundException e1) {
+                    e1.printStackTrace();
+                }
+
+            }
+        } catch (NoSuchMethodException e1) {
+            e1.printStackTrace();
+        } catch (IllegalAccessException e1) {
+            e1.printStackTrace();
+        } catch (InstantiationException e1) {
+            e1.printStackTrace();
+        } catch (InvocationTargetException e1) {
+            e1.printStackTrace();
         }
+
+        if(mWindow == null)
+            return;
 //        mWindow = new PhoneWindow(mContext);
         mWindow.setWindowManager(mWindowManager, null, null);
         mWindow.requestFeature(Window.FEATURE_NO_TITLE);
         mDecor = mWindow.getDecorView();
-        mDecor.setOnTouchListener(new OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (mShowing) {
-                        hide();
-                    }
-                }
-                return false;
-            }
-        });
+//        mDecor.setOnTouchListener(new OnTouchListener() {
+//            @Override
+//            public boolean onTouch(View v, MotionEvent event) {
+//                if (event.getAction() == MotionEvent.ACTION_DOWN) {
+//                    if (mShowing) {
+//                        hide();
+//                    }
+//                }
+//                return false;
+//            }
+//        });
         mWindow.setContentView(this);
         mWindow.setBackgroundDrawableResource(android.R.color.transparent);
 
@@ -281,7 +296,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     }
 
     protected int getControllerRes() {
-        return  R.layout.media_controller;
+        return R.layout.media_controller;
     }
 
     protected void initControllerView(View v) {
@@ -324,7 +339,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         }
 
         btn_fullScreen = v.findViewById(R.id.btn_fullScreen);
-        if(btn_fullScreen != null){
+        if (btn_fullScreen != null) {
             btn_fullScreen.setOnClickListener(mFullScreenListener);
         }
 
@@ -452,13 +467,21 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 
     private void doPauseResume() {
         if (mPlayer.isPlaying()) {
-            mPlayer.pause();
-            updatePausePlay(false);
+            pause();
         } else {
-            mPlayer.start();
-            updatePausePlay(true);
+            start();
         }
 
+    }
+
+    public void pause(){
+        mPlayer.pause();
+        updatePausePlay(false);
+    }
+
+    public void start(){
+        mPlayer.start();
+        updatePausePlay(true);
     }
 
     @Override
@@ -483,9 +506,9 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         }
     }
 
-    public void setFullScreenListener(OnClickListener fullScreenListener){
+    public void setFullScreenListener(OnClickListener fullScreenListener) {
         mFullScreenListener = fullScreenListener;
-        if(mRoot != null){
+        if (mRoot != null) {
             btn_fullScreen.setOnClickListener(mFullScreenListener);
         }
     }
@@ -493,7 +516,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     @Override
     public void onFullScreen(boolean isFull) {
         isFullScreen = isFull;
-        if(btn_fullScreen != null)
+        if (btn_fullScreen != null)
             btn_fullScreen.setSelected(isFull);
     }
 
@@ -537,7 +560,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         if (mProgress != null) {
             mProgress.setEnabled(enabled);
         }
-        if(btn_fullScreen != null)
+        if (btn_fullScreen != null)
             btn_fullScreen.setEnabled(enabled && mFullScreenListener != null);
         disableUnsupportedButtons();
         super.setEnabled(enabled);
@@ -545,25 +568,23 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.btn_play){
+        if (v.getId() == R.id.btn_play) {
             show(sDefaultTimeout);
             doPauseResume();
-        }else if(v.getId() == R.id.btn_rew){
+        } else if (v.getId() == R.id.btn_rew) {
             int pos = mPlayer.getCurrentPosition();
             pos -= 5000; // milliseconds
             mPlayer.seekTo(pos);
             setProgress();
 
             show(sDefaultTimeout);
-        }else if(v.getId() == R.id.btn_fwd){
+        } else if (v.getId() == R.id.btn_fwd) {
             int pos = mPlayer.getCurrentPosition();
             pos += 15000; // milliseconds
             mPlayer.seekTo(pos);
             setProgress();
 
             show(sDefaultTimeout);
-        }else if(v.getId() == R.id.btn_fullScreen){
-
         }
     }
 

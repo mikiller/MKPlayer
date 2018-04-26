@@ -19,9 +19,13 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 
+import com.bumptech.glide.module.GlideModule;
+import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
 import com.uilib.utils.DisplayUtil;
 
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
+import tv.danmaku.ijk.media.player.IjkTimedText;
 import tv.danmaku.ijk.media.viewlib.widget.media.IMediaController;
 
 /**
@@ -29,9 +33,9 @@ import tv.danmaku.ijk.media.viewlib.widget.media.IMediaController;
  */
 
 public class MKPlayer extends FrameLayout {
+    private final String TAG = this.getClass().getSimpleName();
     private MKVideoView videoView;
     private ImageView iv_thumb;
-    private ImageButton btn_bigPlay;
     private MKMediaController mediaController;
 
     private int mScreenUiVisibility;
@@ -57,37 +61,14 @@ public class MKPlayer extends FrameLayout {
         LayoutInflater.from(context).inflate(R.layout.layout_mkplayer, this);
         videoView = findViewById(R.id.videoView);
         iv_thumb = findViewById(R.id.iv_thumb);
-        btn_bigPlay = findViewById(R.id.btn_bigPlay);
 
         videoView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                videoView.toggleMediaControlsVisiblity();
+                toggleMediaControlsVisiblity();
             }
         });
-    }
-
-    public void setMediaController(MKMediaController controller){
-        mediaController = controller;
-        mediaController.setFullScreenListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                toggleFullScreen();
-                videoView.toggleMediaControlsVisiblity();
-            }
-        });
-        videoView.setMediaController(mediaController);
-    }
-
-    /**
-     * 全屏切换，点击全屏按钮
-     */
-    private void toggleFullScreen() {
-        if (DisplayUtil.getScreenOrientation((Activity) getContext()) != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
-            ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        } else {
-            ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-        }
+        setPlayerStateListener();
     }
 
     @Override
@@ -139,22 +120,117 @@ public class MKPlayer extends FrameLayout {
             setLayoutParams(originLp);
     }
 
+    public void setThumb(String url){
+        GlideImageLoader.getInstance().loadImage(getContext(), url, R.mipmap.placeholder, iv_thumb, 0);
+    }
+
+    public void setMediaController(MKMediaController controller){
+        mediaController = controller;
+        mediaController.setFullScreenListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                toggleFullScreen();
+                toggleMediaControlsVisiblity();
+            }
+        });
+        mediaController.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mediaController.isShowing())
+                    mediaController.hide();
+            }
+        });
+        if (mediaController != null) {
+            mediaController.hide();
+        }
+        attachMediaController();
+        //videoView.setMediaController(mediaController);
+    }
+
+    /**
+     * 全屏切换，点击全屏按钮
+     */
+    private void toggleFullScreen() {
+        if (DisplayUtil.getScreenOrientation((Activity) getContext()) != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {
+            ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } else {
+            ((Activity)getContext()).setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        }
+    }
+
+    private void toggleMediaControlsVisiblity() {
+        if(!videoView.isInPlaybackState() || mediaController == null)
+            return;
+        if (mediaController.isShowing()) {
+            mediaController.hide();
+        } else {
+            mediaController.show();
+        }
+    }
+
+    private void attachMediaController() {
+        if (mediaController != null) {
+            mediaController.setMediaPlayer(videoView);
+            mediaController.setAnchorView(videoView);
+            mediaController.setEnabled(videoView.isInPlaybackState());
+        }
+    }
+
     public void setVideoUri(Uri uri){
         videoView.setVideoURI(uri);
     }
 
     public void start(){
-        videoView.start();
+//        videoView.start();
+        mediaController.start();
     }
 
     public void stopPlayback(){
         videoView.stopPlayback();
     }
 
-    @Override
-    protected void onWindowVisibilityChanged(int visibility) {
-        super.onWindowVisibilityChanged(visibility);
-        Log.e("player", "visiblity: " + visibility);
+    private void setPlayerStateListener(){
+        videoView.setVideoStateListener(new MKVideoView.VideoViewStateListener(){
+            @Override
+            public void onPrapered(boolean needShow) {
+                super.onPrapered(needShow);
+                if(mediaController != null) {
+                    mediaController.setEnabled(true);
+                    if(needShow)
+                        mediaController.show();
+                }
+            }
+
+            @Override
+            public void onOpenVideo() {
+                //attachMediaController();
+            }
+
+            @Override
+            public void onStart() {
+                iv_thumb.setVisibility(GONE);
+            }
+
+            @Override
+            public void onCompleted() {
+                super.onCompleted();
+                if(mediaController != null)
+                    mediaController.show();
+            }
+
+            @Override
+            public void onError(IMediaPlayer mp, int framework_err, int impl_err) {
+                super.onError(mp, framework_err, impl_err);
+                if(mediaController != null)
+                    mediaController.hide();
+            }
+
+            @Override
+            public void onTimedText(IjkTimedText text) {
+                Log.e(TAG, text.getText());
+                super.onTimedText(text);
+            }
+        });
     }
 
     @Override

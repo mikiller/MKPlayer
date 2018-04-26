@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -11,19 +12,34 @@ import com.mikiller.mkplayerlib.MKPlayer;
 import com.mikiller.mkplayerlib.MKVideoView;
 import com.smg.mediaplayer.R;
 import com.smg.mediaplayer.base.BaseActivity;
+import com.smg.mediaplayer.logic.SafeLogic;
+import com.smg.mediaplayer.utils.SignatureUtils;
 import com.smg.mediaplayer.widgets.AndroidMediaController;
 import com.uilib.mxgallery.utils.GalleryMediaUtils;
 import com.uilib.mxgallery.widgets.MXGallery;
 import com.uilib.utils.DisplayUtil;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import butterknife.BindView;
+import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
+import tv.danmaku.ijk.media.player.IjkTimedText;
 
 public class WelcomeActivity extends BaseActivity {
-
+    /** 产品密钥ID，产品标识 */
+    private final static String SECRETID = "608bb66316e949abc4b2f3dcb8c0db1c";
+    /** 产品私有密钥，服务端生成签名信息使用，请严格保管，避免泄露 */
+    private final static String SECRETKEY = "36b892904788c1d39d39c7780b015937";
+    /** 业务ID，易盾根据产品业务特点分配 */
+    private final static String BUSINESSID = "97e91f0a5954d53599c3e57658b6e8b6";
+    /** 易盾反垃圾云服务文本在线检测接口地址 */
+    private final static String API_URL = "https://as.dun.163yun.com/v3/text/check";
 //    private ImageView iv_preview;
     private Button btn_gallery;
     @BindView(R.id.videoPlayer)
@@ -74,6 +90,8 @@ public class WelcomeActivity extends BaseActivity {
 //                startActivity(intent);
             }
         });
+
+
     }
 
     /**
@@ -112,6 +130,7 @@ public class WelcomeActivity extends BaseActivity {
                 }else if(fileList != null && fileList.size() > 0){
                     //video.stopPlayback();
                     video.setVideoUri(GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)));
+                    video.setThumb("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1525333972&di=2b78133b5e99f44caafcbf89b7fb1229&imgtype=jpg&er=1&src=http%3A%2F%2Fwww.chuguo.cn%2Fimage%2Finfo%2FImage%2F2015%2F201501072.png");
                     //video.start();
                 }
 //                    GlideImageLoader.getInstance().loadLocalImage(this, GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)),R.mipmap.placeholder, iv_preview);
@@ -122,13 +141,19 @@ public class WelcomeActivity extends BaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        video.start();
+        //video.start();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        video.stopPlayback();
+//        video.stopPlayback();
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        video.stopPlayback();
     }
 }

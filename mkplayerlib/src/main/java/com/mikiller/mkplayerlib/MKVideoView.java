@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
+import tv.danmaku.ijk.media.player.IjkTimedText;
 import tv.danmaku.ijk.media.viewlib.Settings;
 import tv.danmaku.ijk.media.exo.IjkExoMediaPlayer;
 import tv.danmaku.ijk.media.player.AndroidMediaPlayer;
@@ -89,13 +90,8 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     private IRenderView mRenderView;
     private IRenderView.ISurfaceHolder mSurfaceHolder = null;
     private IMediaPlayer mMediaPlayer = null;
-    private IMediaController mMediaController;
-    private IMediaPlayer.OnCompletionListener mOnCompletionListener;
-    private IMediaPlayer.OnPreparedListener mOnPreparedListener;
     private IMediaPlayer.OnErrorListener mOnErrorListener;
-    private IMediaPlayer.OnInfoListener mOnInfoListener;
-    private IMediaPlayer.OnVideoSizeChangedListener mOnVideoSizeChangeListener;
-    private IMediaPlayer.OnBufferingUpdateListener mOnBufferUpdateListener;
+    private VideoViewStateListener stateListener;
 
     private int mVideoWidth;
     private int mVideoHeight;
@@ -315,7 +311,8 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
             // we don't set the target state here either, but preserve the
             // target state that was there before.
             mCurrentState = STATE_PREPARING;
-            attachMediaController();
+            if(stateListener != null)
+                stateListener.onOpenVideo();
         } catch (IOException ex) {
             Log.w(TAG, "Unable to open content: " + mUri, ex);
             mCurrentState = STATE_ERROR;
@@ -400,13 +397,10 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     }
 
     private void initMediaPlayerListener(){
-        mMediaPlayer.setOnPreparedListener(mOnPreparedListener = new IMediaPlayer.OnPreparedListener() {
+        mMediaPlayer.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(IMediaPlayer mp) {
                 mCurrentState = STATE_PREPARED;
-                if (mMediaController != null) {
-                    mMediaController.setEnabled(true);
-                }
                 mVideoWidth = mp.getVideoWidth();
                 mVideoHeight = mp.getVideoHeight();
                 int seekToPosition = mSeekWhenPrepared;  // mSeekWhenPrepared may be changed after seekTo() call
@@ -417,7 +411,6 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                     //Log.i("@@@@", "video size: " + mVideoWidth +"/"+ mVideoHeight);
                     // REMOVED: getHolder().setFixedSize(mVideoWidth, mVideoHeight);
                     if (mRenderView != null) {
-                        Log.e(TAG, "set size in preparelistener");
                         mRenderView.setVideoSize(mVideoWidth, mVideoHeight);
                         mRenderView.setVideoSampleAspectRatio(mVideoSarNum, mVideoSarDen);
                         if (!mRenderView.shouldWaitForResize() || mSurfaceWidth == mVideoWidth && mSurfaceHeight == mVideoHeight) {
@@ -425,31 +418,30 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                             // we need), so we won't get a "surface changed" callback, so
                             // start the video here instead of in the callback.
                             if (mTargetState == STATE_PLAYING) {
-                                Log.e(TAG, "start in preparelistener");
+                                if(stateListener != null)
+                                    stateListener.onPrapered(true);
                                 start();
-                                if (mMediaController != null) {
-                                    mMediaController.show();
-                                }
                             } else if (!isPlaying() &&
                                     (seekToPosition != 0 || getCurrentPosition() > 0)) {
-                                if (mMediaController != null) {
-                                    // Show the media controls when we're paused into a video and make 'em stick.
-                                    mMediaController.show(0);
-                                }
+                                if(stateListener != null)
+                                    stateListener.onPrapered(true);
                             }
                         }
                     }
+                    if(stateListener != null)
+                        stateListener.onPrapered(false);
                 } else {
                     // We don't know the video size yet, but should start anyway.
                     // The video size might be reported to us later.
                     if (mTargetState == STATE_PLAYING) {
-                        Log.e(TAG, "start in preparelistener without video size");
+                        if(stateListener != null)
+                            stateListener.onPrapered(false);
                         start();
                     }
                 }
             }
         });
-        mMediaPlayer.setOnVideoSizeChangedListener(mOnVideoSizeChangeListener = new IMediaPlayer.OnVideoSizeChangedListener() {
+        mMediaPlayer.setOnVideoSizeChangedListener(new IMediaPlayer.OnVideoSizeChangedListener() {
             @Override
             public void onVideoSizeChanged(IMediaPlayer mp, int width, int height, int sar_num, int sar_den) {
                 mVideoWidth = mp.getVideoWidth();
@@ -465,17 +457,17 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                     // REMOVED: getHolder().setFixedSize(mVideoWidth, mVideoHeight);
                     requestLayout();
                 }
+                if(stateListener!= null)
+                    stateListener.onVideoSizeChanged(width, height, sar_num, sar_den);
             }
         });
-        mMediaPlayer.setOnCompletionListener(mOnCompletionListener = new IMediaPlayer.OnCompletionListener() {
+        mMediaPlayer.setOnCompletionListener(new IMediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(IMediaPlayer mp) {
                 mCurrentState = STATE_PLAYBACK_COMPLETED;
                 mTargetState = STATE_PLAYBACK_COMPLETED;
-                if (mMediaController != null) {
-                    Log.e(TAG, "hide controller in completetion listener");
-                    mMediaController.show();
-                }
+                if(stateListener != null)
+                    stateListener.onCompleted();
             }
         });
         mMediaPlayer.setOnErrorListener(mOnErrorListener = new IMediaPlayer.OnErrorListener() {
@@ -484,10 +476,8 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                 Log.e(TAG, "Error: " + framework_err + "," + impl_err);
                 mCurrentState = STATE_ERROR;
                 mTargetState = STATE_ERROR;
-                if (mMediaController != null) {
-                    Log.e(TAG, "hide controller in error listener");
-                    mMediaController.hide();
-                }
+                if(stateListener != null)
+                    stateListener.onError(mp, framework_err, impl_err);
 
                     /* Otherwise, pop up an error dialog so the user knows that
                      * something bad has happened. Only try and pop up the dialog
@@ -512,8 +502,8 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                                             /* If we get here, there is no onError listener, so
                                              * at least inform them that the video is over.
                                              */
-                                            if (mOnCompletionListener != null) {
-                                                mOnCompletionListener.onCompletion(mMediaPlayer);
+                                            if (stateListener != null) {
+                                                stateListener.onCompleted();
                                             }
                                         }
                                     })
@@ -523,7 +513,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                 return true;
             }
         });
-        mMediaPlayer.setOnInfoListener(mOnInfoListener = new IMediaPlayer.OnInfoListener() {
+        mMediaPlayer.setOnInfoListener(new IMediaPlayer.OnInfoListener() {
             @Override
             public boolean onInfo(IMediaPlayer mp, int what, int extra) {
                 switch (what) {
@@ -567,26 +557,33 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                         Log.d(TAG, "MEDIA_INFO_AUDIO_RENDERING_START:");
                         break;
                 }
+                if(stateListener != null)
+                    stateListener.onGetInfo(what, extra);
                 return true;
             }
         });
-        mMediaPlayer.setOnBufferingUpdateListener(mOnBufferUpdateListener = new IMediaPlayer.OnBufferingUpdateListener() {
+        mMediaPlayer.setOnBufferingUpdateListener(new IMediaPlayer.OnBufferingUpdateListener() {
             @Override
             public void onBufferingUpdate(IMediaPlayer mp, int percent) {
                 mCurrentBufferPercentage = percent;
+                if(stateListener != null)
+                    stateListener.onBufferUpdated(percent);
+            }
+        });
+        mMediaPlayer.setOnTimedTextListener(new IMediaPlayer.OnTimedTextListener() {
+            @Override
+            public void onTimedText(IMediaPlayer mp, IjkTimedText text) {
+                if(stateListener != null)
+                    stateListener.onTimedText(text);
             }
         });
     }
 
-    private void attachMediaController() {
-        if (mMediaPlayer != null && mMediaController != null) {
-            mMediaController.setMediaPlayer(this);
-            mMediaController.setAnchorView(this);
-            mMediaController.setEnabled(isInPlaybackState());
-        }
+    public void setVideoStateListener(VideoViewStateListener listener){
+        stateListener = listener;
     }
 
-    private boolean isInPlaybackState() {
+    public boolean isInPlaybackState() {
         return (mMediaPlayer != null &&
                 mCurrentState != STATE_ERROR &&
                 mCurrentState != STATE_IDLE &&
@@ -596,14 +593,6 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     public void releaseWithoutStop() {
         if (mMediaPlayer != null)
             mMediaPlayer.setDisplay(null);
-    }
-
-    public void setMediaController(IMediaController controller) {
-        if (mMediaController != null) {
-            mMediaController.hide();
-        }
-        mMediaController = controller;
-        attachMediaController();
     }
 
     public int setAspectRatio(int ratioType) {
@@ -680,22 +669,15 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         }
     }
 
-    public void toggleMediaControlsVisiblity() {
-        if(!isInPlaybackState() || mMediaController == null)
-            return;
-        if (mMediaController.isShowing()) {
-            Log.e(TAG, "hide controller in togglevisiblity");
-            mMediaController.hide();
-        } else {
-            mMediaController.show();
-        }
-    }
+
 
     @Override
     public void start() {
         if (isInPlaybackState()) {
             mMediaPlayer.start();
             mCurrentState = STATE_PLAYING;
+            if(stateListener != null)
+                stateListener.onStart();
         }
         mTargetState = STATE_PLAYING;
     }
@@ -706,6 +688,8 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
             if (mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
                 mCurrentState = STATE_PAUSED;
+                if(stateListener != null)
+                    stateListener.onPause();
             }
         }
         mTargetState = STATE_PAUSED;
@@ -769,5 +753,19 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     @Override
     public int getAudioSessionId() {
         return 0;
+    }
+
+    public static class VideoViewStateListener{
+        public void onPrapered(boolean needShow){}
+        public void onOpenVideo(){}
+        public void onStart(){}
+        public void onPause(){}
+        public void onCompleted(){}
+        public void onError(IMediaPlayer mp, int framework_err, int impl_err){}
+        public void onVideoSizeChanged(int width, int height, int sar_num, int sar_den){}
+        public void onGetInfo(int what, int extra){}
+        public void onBufferUpdated(int progress){}
+        public void onTimedText(IjkTimedText text){}
+
     }
 }
