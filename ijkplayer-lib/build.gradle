@@ -56,5 +56,5 @@ dependencies {
     // arm64Compile project(':player-arm64')
     // x86Compile project(':player-x86')
     // x86_64Compile project(':player-x86_64')
-//    api project(':ijkplayer-exo')
+    //api project(':ijkplayer-exo')
 }
