@@ -266,7 +266,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     }
 
     @TargetApi(Build.VERSION_CODES.M)
-    private void openVideo() {
+    public void openVideo() {
         if (mUri == null || mSurfaceHolder == null) {
             // not ready for playback just yet, will try again later
             return;

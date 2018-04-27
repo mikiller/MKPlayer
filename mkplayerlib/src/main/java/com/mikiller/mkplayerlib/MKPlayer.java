@@ -178,6 +178,7 @@ public class MKPlayer extends FrameLayout {
 
     public void setVideoUri(Uri uri){
         videoView.setVideoURI(uri);
+        videoView.openVideo();
     }
 
     public void start(){
