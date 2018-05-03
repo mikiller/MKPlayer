@@ -1,8 +1,10 @@
 package com.mikiller.mkplayerlib;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.media.AudioManager;
+import android.os.Build;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -20,6 +22,7 @@ import android.widget.MediaController;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Formatter;
@@ -46,22 +49,23 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     private boolean mShowing;
     private boolean mDragging;
     private boolean isFullScreen;
-    private static final int sDefaultTimeout = 3000;
+    protected static final int sDefaultTimeout = 3000;
     private final boolean mUseFastForward;
     //    private boolean mFromXml;
     private boolean mListenersSet;
 
     StringBuilder mFormatBuilder;
     Formatter mFormatter;
-    private ImageButton btn_fullScreen;
-    private ImageButton btn_play;
-    private ImageButton btn_fwd;
-    private ImageButton btn_rew;
-    private ImageButton mNextButton;
-    private ImageButton mPrevButton;
+    protected ImageButton btn_fullScreen;
+    protected ImageButton btn_play;
+    protected ImageButton btn_fwd;
+    protected ImageButton btn_rew;
+    protected ImageButton mNextButton;
+    protected ImageButton mPrevButton;
     //    private CharSequence mPlayDescription;
 //    private CharSequence mPauseDescription;
-    private View.OnClickListener mNextListener, mPrevListener, mFullScreenListener;
+    private View.OnClickListener mNextListener, mPrevListener;//, mFullScreenListener;
+    protected OnClickListener customListener;
 
     private final OnLayoutChangeListener mLayoutChangeListener =
             new OnLayoutChangeListener() {
@@ -76,7 +80,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
                 }
             };
 
-    private final Runnable mFadeOut = new Runnable() {
+    protected final Runnable mFadeOut = new Runnable() {
         @Override
         public void run() {
             hide();
@@ -94,12 +98,12 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     };
 
     private final SeekBar.OnSeekBarChangeListener mSeekListener = new SeekBar.OnSeekBarChangeListener() {
+        private long targetPos = 0;
         @Override
         public void onStartTrackingTouch(SeekBar bar) {
             show(3600000);
 
             mDragging = true;
-
             // By removing these pending progress messages we make sure
             // that a) we won't update the progress while the user adjusts
             // the seekbar and b) once the user is done dragging the thumb
@@ -118,7 +122,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 
             long duration = mPlayer.getDuration();
             long newposition = (duration * progress) / 1000L;
-            mPlayer.seekTo((int) newposition);
+            targetPos = newposition;
             if (tv_playTime != null)
                 tv_playTime.setText(stringForTime((int) newposition));
         }
@@ -126,6 +130,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         @Override
         public void onStopTrackingTouch(SeekBar bar) {
             mDragging = false;
+            mPlayer.seekTo((int) targetPos);
             setProgress();
 //            updatePausePlay();
             show(sDefaultTimeout);
@@ -197,7 +202,11 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 //        mWindow = new PhoneWindow(mContext);
         mWindow.setWindowManager(mWindowManager, null, null);
         mWindow.requestFeature(Window.FEATURE_NO_TITLE);
+
         mDecor = mWindow.getDecorView();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            mWindow.setStatusBarColor(Color.TRANSPARENT);
+        }
 //        mDecor.setOnTouchListener(new OnTouchListener() {
 //            @Override
 //            public boolean onTouch(View v, MotionEvent event) {
@@ -299,6 +308,10 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         return R.layout.media_controller;
     }
 
+    protected boolean needFullScreen(){
+        return false;
+    }
+
     protected void initControllerView(View v) {
 //        Resources res = mContext.getResources();
 //        mPlayDescription = res
@@ -340,7 +353,8 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
 
         btn_fullScreen = v.findViewById(R.id.btn_fullScreen);
         if (btn_fullScreen != null) {
-            btn_fullScreen.setOnClickListener(mFullScreenListener);
+            btn_fullScreen.setVisibility(needFullScreen() ? VISIBLE : GONE);
+            btn_fullScreen.setOnClickListener(customListener);
         }
 
         mProgress = v.findViewById(R.id.progress);
@@ -506,11 +520,28 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         }
     }
 
-    public void setFullScreenListener(OnClickListener fullScreenListener) {
-        mFullScreenListener = fullScreenListener;
-        if (mRoot != null) {
-            btn_fullScreen.setOnClickListener(mFullScreenListener);
+//    public void setFullScreenListener() {
+//        if (mRoot != null) {
+//            btn_fullScreen.setOnClickListener(new OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    if(customWidgetListener != null)
+//                }
+//            });
+//        }
+//    }
+
+    public void setCustomListener(OnClickListener listener){
+        customListener = listener;
+        if (mRoot != null && customListener != null) {
+            btn_fullScreen.setOnClickListener(customListener);
         }
+    }
+
+    @Override
+    public void toggleFullScreen() {
+        if(btn_fullScreen != null)
+            btn_fullScreen.performClick();
     }
 
     @Override
@@ -561,7 +592,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
             mProgress.setEnabled(enabled);
         }
         if (btn_fullScreen != null)
-            btn_fullScreen.setEnabled(enabled && mFullScreenListener != null);
+            btn_fullScreen.setEnabled(enabled);
         disableUnsupportedButtons();
         super.setEnabled(enabled);
     }
@@ -640,5 +671,4 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
     public CharSequence getAccessibilityClassName() {
         return MKMediaController.class.getName();
     }
-
 }

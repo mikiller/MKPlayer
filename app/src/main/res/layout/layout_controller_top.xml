@@ -1,45 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
-    <LinearLayout
-        android:id="@+id/ll_controllerTop"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@drawable/shape_top_controller_bg"
-        android:layout_gravity="top"
-        android:gravity="center_vertical">
 
-        <ImageButton
-            android:id="@+id/btn_return"
+    <RelativeLayout
+        android:id="@+id/rl_controllerTop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:id="@+id/ll_controllerTop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:background="@drawable/shape_top_controller_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btn_return"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="5dp"
+                android:background="@android:color/transparent"
+                android:padding="5dp"
+                android:src="@mipmap/btn_back_white" />
+
+            <TextView
+                android:id="@+id/tv_videoTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="15dp"
+                android:layout_weight="1"
+                android:ellipsize="marquee"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:singleLine="true"
+                android:textColor="@android:color/white"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/btn_definition"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:background="@drawable/shape_definition"
+                android:gravity="center"
+                android:paddingBottom="2dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:paddingTop="2dp"
+                android:textColor="@android:color/white"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <RadioGroup
+            android:id="@+id/rdg_definition"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@mipmap/btn_back_white"
-            android:background="@android:color/transparent"
-            android:padding="5dp"
-            android:layout_margin="5dp"/>
+            android:orientation="vertical"
+            android:background="@color/bg_mask"
+            android:layout_below="@+id/ll_controllerTop"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:visibility="gone">
 
-        <TextView
-            android:id="@+id/tv_videoTitle"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="15dp"
-            android:ellipsize="marquee"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
-            android:marqueeRepeatLimit="marquee_forever"
-            android:singleLine="true"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"/>
-
-        <ImageButton
-            android:id="@+id/btn_setting"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@mipmap/ic_setting"
-            android:scaleType="centerCrop"
-            android:background="@android:color/transparent"
-            android:layout_marginRight="10dp"/>
-    </LinearLayout>
+            <RadioButton
+                android:id="@+id/rdb_fd"
+                style="@style/rdbDefinition"
+                android:text="@string/fd"
+                android:tag="FD"/>
+            <RadioButton
+                android:id="@+id/rdb_sd"
+                style="@style/rdbDefinition"
+                android:text="@string/sd"
+                android:tag="SD"/>
+            <RadioButton
+                android:id="@+id/rdb_hd"
+                style="@style/rdbDefinition"
+                android:text="@string/hd"
+                android:tag="HD"/>
+            <RadioButton
+                android:id="@+id/rdb_4k"
+                style="@style/rdbDefinition"
+                android:text="@string/_4k"
+                android:tag="4K"/>
+        </RadioGroup>
+    </RelativeLayout>
 </merge>

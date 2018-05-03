@@ -109,4 +109,6 @@
     <!-- -->
     <string name="pref_key_last_directory"></string>
 
+    <string name="pref_key_current_definition">pref.current_definition</string>
+    <string name="pref_summary_current_definition">HD</string>
 </resources>

@@ -3,4 +3,6 @@
     <color name="name_main_tab">#e5fafafa</color>
     <color name="main_tab_txt">#8e8e93</color>
     <color name="mine_menu_txt">#a6b0b9</color>
+
+    <color name="bg_mask">#cc323c46</color>
 </resources>

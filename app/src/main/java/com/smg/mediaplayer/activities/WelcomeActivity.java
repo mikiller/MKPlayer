@@ -3,6 +3,7 @@ package com.smg.mediaplayer.activities;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -67,7 +68,29 @@ public class WelcomeActivity extends BaseActivity {
 //        });
 //        IjkMediaPlayer.loadLibrariesOnce(null);
 //        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
-        video.setMediaController(new AndroidMediaController(this, true));
+        video.setMediaController(mediaController = new AndroidMediaController(this, true, null));
+        video.setCustomWidgetListener(new MKPlayer.CustomWidgetListener() {
+            @Override
+            public void onCustomClicked(int viewId, String extra) {
+                switch (viewId){
+                    case R.id.rdb_fd:
+                    case R.id.rdb_sd:
+                    case R.id.rdb_hd:
+                    case R.id.rdb_4k:
+                        video.toggleMediaControlsVisiblity();
+                        switchDefinition(extra);
+                        video.start();
+                        break;
+                }
+            }
+        });
+        video.setVideoUri(MKPlayer.SD, Uri.parse("http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/SD/movie_index.m3u8"));
+        video.setVideoUri(MKPlayer.HD, Uri.parse("http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/HD/movie_index.m3u8"));
+        video.preparedVideo();
+        mediaController.setDefinitions(MKPlayer.SD, MKPlayer.HD);
+        mediaController.setDefaultDefinition(video.getDefaultDefinition());
+        video.start();
+
 //        video.setOnClickListener(new View.OnClickListener() {
 //            @Override
 //            public void onClick(View v) {
@@ -92,6 +115,15 @@ public class WelcomeActivity extends BaseActivity {
         });
 
 
+    }
+
+    private void switchDefinition(String definition){
+        int currentPos = 0;
+        if(video.isPlaying()){
+            currentPos = video.getCurrentPosition();
+            video.pausePlayback();
+        }
+        video.toggleVideoUri(definition, currentPos);
     }
 
     /**
@@ -129,7 +161,7 @@ public class WelcomeActivity extends BaseActivity {
                     //GlideImageLoader.getInstance().loadLocalImage(this, GalleryMediaUtils.getInstance().getFileUri(tmpFile),R.mipmap.placeholder, iv_preview);
                 }else if(fileList != null && fileList.size() > 0){
                     //video.stopPlayback();
-                    video.setVideoUri(GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)));
+                    video.setVideoUri(MKPlayer.HD, GalleryMediaUtils.getInstance().getFileUri(fileList.get(0)));
                     video.setThumb("https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1525333972&di=2b78133b5e99f44caafcbf89b7fb1229&imgtype=jpg&er=1&src=http%3A%2F%2Fwww.chuguo.cn%2Fimage%2Finfo%2FImage%2F2015%2F201501072.png");
                     //video.start();
                 }

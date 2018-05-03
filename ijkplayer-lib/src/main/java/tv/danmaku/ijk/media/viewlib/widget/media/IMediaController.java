@@ -41,5 +41,6 @@ public interface IMediaController {
     //----------
     void showOnce(View view);
 
+    void toggleFullScreen();
     void onFullScreen(boolean isFull);
 }

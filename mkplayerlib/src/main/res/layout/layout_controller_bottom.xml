@@ -72,6 +72,7 @@
         android:padding="7dp"
         android:layout_marginRight="5dp"
         android:src="@drawable/selector_fullscreen"
-        android:background="@android:color/transparent"/>
+        android:background="@android:color/transparent"
+        android:visibility="gone"/>
     </LinearLayout>
 </merge>

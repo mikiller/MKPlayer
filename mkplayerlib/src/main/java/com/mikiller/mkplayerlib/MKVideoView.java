@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -23,6 +24,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.MediaController;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
@@ -106,6 +108,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
     private boolean mCanSeekBack = true;
     private boolean mCanSeekForward = true;
     private int mCurrentRender = RENDER_SURFACE_VIEW;
+    private String currentDefinition;
 
     public MKVideoView(@NonNull Context context) {
         this(context, null, 0);
@@ -136,6 +139,16 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         // REMOVED: mPendingSubtitleTracks = new Vector<Pair<InputStream, MediaFormat>>();
         mCurrentState = STATE_IDLE;
         mTargetState = STATE_IDLE;
+        currentDefinition = mSettings.getCurrentDefinition();
+    }
+
+    public String getCurrentDefinition() {
+        return currentDefinition;
+    }
+
+    public void setCurrentDefinition(String currentDefinition) {
+        this.currentDefinition = currentDefinition;
+        mSettings.setCurrentDefinition(currentDefinition);
     }
 
     private void initRander(){
@@ -265,8 +278,12 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         holder.bindToMediaPlayer(mp);
     }
 
+    public void prepareVideo(){
+        openVideo();
+    }
+
     @TargetApi(Build.VERSION_CODES.M)
-    public void openVideo() {
+    private void openVideo() {
         if (mUri == null || mSurfaceHolder == null) {
             // not ready for playback just yet, will try again later
             return;
@@ -464,6 +481,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         mMediaPlayer.setOnCompletionListener(new IMediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(IMediaPlayer mp) {
+                Log.e(TAG, "complition");
                 mCurrentState = STATE_PLAYBACK_COMPLETED;
                 mTargetState = STATE_PLAYBACK_COMPLETED;
                 if(stateListener != null)
@@ -494,21 +512,23 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                         messageId = R.string.VideoView_error_text_unknown;
                     }
 
-                    new AlertDialog.Builder(getContext())
-                            .setMessage(messageId)
-                            .setPositiveButton(R.string.VideoView_error_button,
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(DialogInterface dialog, int whichButton) {
-                                            /* If we get here, there is no onError listener, so
-                                             * at least inform them that the video is over.
-                                             */
-                                            if (stateListener != null) {
-                                                stateListener.onCompleted();
-                                            }
-                                        }
-                                    })
-                            .setCancelable(false)
-                            .show();
+                    Toast.makeText(getContext(), messageId, Toast.LENGTH_SHORT).show();
+
+//                    new AlertDialog.Builder(getContext())
+//                            .setMessage(messageId)
+//                            .setPositiveButton(R.string.VideoView_error_button,
+//                                    new DialogInterface.OnClickListener() {
+//                                        public void onClick(DialogInterface dialog, int whichButton) {
+//                                            /* If we get here, there is no onError listener, so
+//                                             * at least inform them that the video is over.
+//                                             */
+//                                            if (stateListener != null) {
+//                                                stateListener.onCompleted();
+//                                            }
+//                                        }
+//                                    })
+//                            .setCancelable(false)
+//                            .show();
                 }
                 return true;
             }
@@ -575,6 +595,13 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
             public void onTimedText(IMediaPlayer mp, IjkTimedText text) {
                 if(stateListener != null)
                     stateListener.onTimedText(text);
+            }
+        });
+        mMediaPlayer.setOnSeekCompleteListener(new IMediaPlayer.OnSeekCompleteListener() {
+            @Override
+            public void onSeekComplete(IMediaPlayer iMediaPlayer) {
+                if(stateListener != null)
+                    stateListener.onSeeked((int) iMediaPlayer.getCurrentPosition());
             }
         });
     }
@@ -653,6 +680,18 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
             mMediaPlayer.stop();
             release(true);
         }
+    }
+
+    /**
+     * add
+     * 获取中断的进度
+     * @return  进度
+     */
+    public int getInterruptPosition() {
+        if (mMediaPlayer != null) {
+            return (int) mMediaPlayer.getCurrentPosition();
+        }
+        return 0;
     }
 
     public void release(boolean cleartargetstate) {
@@ -761,6 +800,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         public void onStart(){}
         public void onPause(){}
         public void onCompleted(){}
+        public void onSeeked(int pos){}
         public void onError(IMediaPlayer mp, int framework_err, int impl_err){}
         public void onVideoSizeChanged(int width, int height, int sar_num, int sar_den){}
         public void onGetInfo(int what, int extra){}

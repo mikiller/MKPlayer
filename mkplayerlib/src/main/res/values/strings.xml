@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MKPlayerLib</string>
+
+    <string name="no_url">请先设置视频地址</string>
 </resources>

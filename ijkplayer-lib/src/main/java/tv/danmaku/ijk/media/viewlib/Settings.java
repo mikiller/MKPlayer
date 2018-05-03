@@ -111,4 +111,14 @@ public class Settings {
         String key = mAppContext.getString(R.string.pref_key_last_directory);
         mSharedPreferences.edit().putString(key, path).apply();
     }
+
+    public void setCurrentDefinition(String definition){
+        String key = mAppContext.getString(R.string.pref_key_current_definition);
+        mSharedPreferences.edit().putString(key, definition).commit();
+    }
+
+    public String getCurrentDefinition(){
+        String key = mAppContext.getString(R.string.pref_key_current_definition);
+        return mSharedPreferences.getString(key, mAppContext.getString(R.string.pref_summary_current_definition));
+    }
 }

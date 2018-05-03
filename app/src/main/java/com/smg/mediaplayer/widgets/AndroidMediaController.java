@@ -23,9 +23,15 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.mikiller.mkplayerlib.MKMediaController;
 import com.smg.mediaplayer.R;
+import com.uilib.titlebar.TitleBar;
+import com.uilib.utils.AnimUtils;
 
 import java.util.ArrayList;
 
@@ -33,18 +39,21 @@ import tv.danmaku.ijk.media.viewlib.widget.media.IMediaController;
 
 
 public class AndroidMediaController extends MKMediaController implements IMediaController {
-    private LinearLayout ll_controllerTop;
+    private RelativeLayout rl_controllerTop;
     private ImageButton btn_return;
-    private ImageButton btn_setting;
+    private TextView btn_definition;
+    private RadioGroup rdg_definition;
+    private TitleBar titleBar;
 
     public AndroidMediaController(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView(context);
     }
 
-    public AndroidMediaController(Context context, boolean useFastForward) {
+    public AndroidMediaController(Context context, boolean useFastForward, TitleBar titleBar) {
         super(context, useFastForward);
         initView(context);
+        this.titleBar = titleBar;
     }
 
     public AndroidMediaController(Context context) {
@@ -61,18 +70,70 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
     }
 
     @Override
+    protected boolean needFullScreen() {
+        return true;
+    }
+
+    @Override
     protected void initControllerView(View v) {
         super.initControllerView(v);
-        ll_controllerTop = v.findViewById(R.id.ll_controllerTop);
+        rl_controllerTop = v.findViewById(R.id.rl_controllerTop);
         btn_return = v.findViewById(R.id.btn_return);
-        btn_setting = v.findViewById(R.id.btn_setting);
+        btn_definition = v.findViewById(R.id.btn_definition);
+        rdg_definition = v.findViewById(R.id.rdg_definition);
+
+        btn_return.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                btn_fullScreen.performClick();
+            }
+        });
+        btn_definition.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(rdg_definition.getVisibility() == VISIBLE) {
+                    AnimUtils.startAlphaAnim(rdg_definition, 1f,  0f, 150);
+                    postDelayed(mFadeOut, sDefaultTimeout);
+                }else{
+                    AnimUtils.startAlphaAnim(rdg_definition, 0f, 1f, 150);
+                    removeCallbacks(mFadeOut);
+                }
+            }
+        });
+
+        rdg_definition.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                RadioButton rdb = group.findViewById(checkedId);
+                if(rdb.isChecked()) {
+                    btn_definition.setText(rdb.getText().toString());
+                    AnimUtils.startAlphaAnim(rdg_definition, 1f, 0f, 150);
+                    if(customListener != null)
+                        customListener.onClick(rdb);
+                }
+            }
+        });
+    }
+
+    public void setDefinitions(String... definitions){
+        if(definitions != null){
+            for(String def : definitions){
+                rdg_definition.findViewWithTag(def).setVisibility(VISIBLE);
+            }
+        }
+    }
+
+    public void setDefaultDefinition(String definition){
+        btn_definition.setText(((RadioButton)rdg_definition.findViewWithTag(definition)).getText().toString());
     }
 
     @Override
     public void onFullScreen(boolean isFull) {
         super.onFullScreen(isFull);
-        if(ll_controllerTop != null)
-            ll_controllerTop.setVisibility(isFull ? VISIBLE : GONE);
+        if(rl_controllerTop != null)
+            rl_controllerTop.setVisibility(isFull ? VISIBLE : GONE);
+        if(titleBar != null)
+            titleBar.setVisibility(isFull ? GONE : VISIBLE);
     }
 
     @Override
@@ -83,6 +144,8 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
     @Override
     public void hide() {
         super.hide();
+        if(rdg_definition != null && rdg_definition.getVisibility() == VISIBLE)
+            rdg_definition.setVisibility(GONE);
         for (View view : mShowOnceArray)
             view.setVisibility(View.GONE);
         mShowOnceArray.clear();
