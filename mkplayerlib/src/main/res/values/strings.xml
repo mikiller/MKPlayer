@@ -2,4 +2,6 @@
     <string name="app_name">MKPlayerLib</string>
 
     <string name="no_url">请先设置视频地址</string>
+    <string name="fmt_volume">音量：%1$d%%</string>
+    <string name="fmt_light">亮度：%1$d%%</string>
 </resources>

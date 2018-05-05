@@ -4,14 +4,17 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.media.MediaPlayer;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.format.DateUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -19,7 +22,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
@@ -33,7 +36,6 @@ import java.util.TimerTask;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkTimedText;
 
 /**
  * Created by Mikiller on 2018/4/25.
@@ -47,6 +49,7 @@ public class MKPlayer extends FrameLayout {
     private MKVideoView videoView;
     private ImageView iv_thumb;
     private ProgressBar pgs_load;
+    private TextView tv_slideHint;
     private MKMediaController mediaController;
     private Map<String, Uri> urlMap = new HashMap<>();
 
@@ -55,6 +58,9 @@ public class MKPlayer extends FrameLayout {
     private int fullHeight;
     private ViewGroup.LayoutParams originLp;
     private int mInterruptPosition = 0;
+    private GestureDetector gestureDetector;
+    private GestureDetector.OnGestureListener gestureListener;
+    private OnTouchListener touchListener;
     protected CustomWidgetListener customWidgetListener;
 
     public MKPlayer(@NonNull Context context) {
@@ -70,21 +76,140 @@ public class MKPlayer extends FrameLayout {
         initView(context, attrs, defStyleAttr);
     }
 
-    private void initView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr){
+    private void initView(@NonNull Context context, @Nullable AttributeSet attrs, final int defStyleAttr){
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         LayoutInflater.from(context).inflate(R.layout.layout_mkplayer, this);
         videoView = findViewById(R.id.videoView);
         iv_thumb = findViewById(R.id.iv_thumb);
         pgs_load = findViewById(R.id.pgs_loading);
+        tv_slideHint = findViewById(R.id.tv_slideHint);
         setMediaController(new MKMediaController(context, false));
-        videoView.setOnClickListener(new OnClickListener() {
+//        videoView.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                toggleMediaControlsVisiblity();
+//            }
+//        });
+        setPlayerStateListener();
+
+        gestureListener = new GestureDetector.SimpleOnGestureListener(){
+            // 是否声音控制,默认为亮度控制，true为声音控制，false为亮度控制
+            private boolean isVolume;
+            // 是否横向滑动，默认为纵向滑动，true为横向滑动，false为纵向滑动
+            private boolean isLandscape;
+            private boolean isClick;
+            private long mSeekPosition, mVolume = -1;
+            private float mBright = 0.0f;
+            private AudioManager audioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
+
+            private Runnable hideHint = new Runnable() {
+                @Override
+                public void run() {
+                    if(tv_slideHint.getVisibility() == VISIBLE) {
+                        tv_slideHint.setVisibility(GONE);
+                    }
+                }
+            };
+
             @Override
-            public void onClick(View v) {
+            public boolean onDown(MotionEvent e) {
+                isClick = true;
+                Log.e(TAG, "reset isclick");
+                return super.onDown(e);
+            }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                float mOldX = e1.getX(), mOldY = e1.getY();
+                float deltaY = mOldY - e2.getY();
+                float deltaX = mOldX - e2.getX();
+                if(isClick) {
+                    isClick = false;
+                    tv_slideHint.setVisibility(VISIBLE);
+                    // 判断左右或上下滑动
+                    isLandscape = Math.abs(distanceX) >= Math.abs(distanceY);
+                    // 判断是声音或亮度控制
+                    isVolume = mOldX > getResources().getDisplayMetrics().widthPixels * 0.5f;
+                }
+                if(isLandscape){
+                    seekProgress(-deltaX / videoView.getWidth());
+                }else if(isVolume){
+                    setVolume(deltaY / videoView.getHeight());
+                }else{
+                    setLight(deltaY / videoView.getHeight());
+                }
+
+                removeCallbacks(hideHint);
+                postDelayed(hideHint, 1000);
+                return super.onScroll(e1, e2, distanceX, distanceY);
+            }
+
+            @Override
+            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+                if(isLandscape)
+                    videoView.seekTo((int) mSeekPosition);
+                mVolume = -1;
+                mBright = 0.0f;
+                tv_slideHint.setText("");
+                tv_slideHint.setVisibility(GONE);
+                removeCallbacks(hideHint);
+                return super.onFling(e1, e2, velocityX, velocityY);
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
                 toggleMediaControlsVisiblity();
+                return super.onSingleTapUp(e);
+            }
+
+            private void seekProgress(float percent){
+                int position = videoView.getCurrentPosition();
+                long duration = videoView.getDuration();
+                // 单次拖拽最大时间差为100秒或播放时长的1/2
+                long deltaMax = Math.min(100 * 1000, duration / 2);
+                // 计算滑动时间
+                long delta = (long) (deltaMax * percent);
+                // 目标位置
+                mSeekPosition = delta + position;
+                if (mSeekPosition > duration) {
+                    mSeekPosition = duration;
+                } else if (mSeekPosition <= 0) {
+                    mSeekPosition = 0;
+                }
+                tv_slideHint.setText(DateUtils.formatElapsedTime(mSeekPosition / 1000));
+            }
+
+            private void setVolume(float percent){
+                int maxVolume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                if(mVolume == -1){
+                    mVolume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    if(mVolume < 0)
+                        mVolume = 0;
+                }
+                int delta = (int) Math.max(0, Math.min(maxVolume, (percent * maxVolume + mVolume)));
+                audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, (int) delta, 0);
+                tv_slideHint.setText(String.format(getContext().getString(R.string.fmt_volume), delta*100/maxVolume));
+            }
+
+            private void setLight(float percent){
+                WindowManager.LayoutParams attr = ((Activity)getContext()).getWindow().getAttributes();
+                if(mBright == 0.0f){
+                    mBright = Math.max(0.01f, attr.screenBrightness);
+                }
+                attr.screenBrightness = Math.max(0.01f, Math.min(1.0f, mBright + percent));
+                ((Activity)getContext()).getWindow().setAttributes(attr);
+                tv_slideHint.setText(String.format(getContext().getString(R.string.fmt_light), (int)(attr.screenBrightness * 100)));
+            }
+        };
+        gestureDetector = new GestureDetector(getContext(), gestureListener);
+        videoView.setOnTouchListener(touchListener = new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event);
             }
         });
-        setPlayerStateListener();
+        videoView.setClickable(true);
     }
 
     @Override
@@ -156,13 +281,9 @@ public class MKPlayer extends FrameLayout {
 //                }
 //            }
 //        });
-        mediaController.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mediaController.isShowing())
-                    mediaController.hide();
-            }
-        });
+
+        mediaController.setOnTouchListener(touchListener);
+        mediaController.setClickable(true);
         if (mediaController != null) {
             mediaController.hide();
         }
