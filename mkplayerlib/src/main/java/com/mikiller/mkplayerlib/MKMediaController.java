@@ -130,7 +130,7 @@ public class MKMediaController extends FrameLayout implements IMediaController, 
         @Override
         public void onStopTrackingTouch(SeekBar bar) {
             mDragging = false;
-            mPlayer.seekTo((int) targetPos);
+            mPlayer.seekTo((int) Math.max(1, targetPos));
             setProgress();
 //            updatePausePlay();
             show(sDefaultTimeout);

@@ -396,7 +396,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
                     }
                     ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "framedrop", 1);
                     ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "start-on-prepared", 0);
-
+                    ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "enable-accurate-seek", 1);
                     ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "http-detect-range-support", 0);
 
                     ijkMediaPlayer.setOption(IjkMediaPlayer.OPT_CATEGORY_CODEC, "skip_loop_filter", 48);
@@ -689,7 +689,7 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
      */
     public int getInterruptPosition() {
         if (mMediaPlayer != null) {
-            return (int) mMediaPlayer.getCurrentPosition();
+            return (int) Math.max(0, mMediaPlayer.getCurrentPosition());
         }
         return 0;
     }
