@@ -10,7 +10,6 @@
             android:id="@+id/ll_controllerTop"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top"
             android:background="@drawable/shape_top_controller_bg"
             android:gravity="center_vertical"
             android:orientation="horizontal">

@@ -23,42 +23,12 @@
         android:layout_centerInParent="true"
         android:indeterminateDrawable="@drawable/shape_player_pgs"/>
 
-    <RelativeLayout
-        android:id="@+id/rl_networkHint"
+    <com.mikiller.mkplayerlib.NetWorkHint
+        android:id="@+id/netWorkHint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@drawable/shape_media_opt_bg"
-        android:padding="10dp"
-        android:layout_centerInParent="true">
-
-        <TextView
-            android:id="@+id/tv_networkHint"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:text="@string/network_hint"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/tv_start"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/selector_hint_btn_bg"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:text="@string/continue_play"
-            />
-
-        <TextView
-            android:id="@+id/tv_stop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/selector_hint_btn_bg"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:text="@string/stop_play"/>
-    </RelativeLayout>
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
 
     <TextView
         android:id="@+id/tv_slideHint"

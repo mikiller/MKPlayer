@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_networkHint"
+    android:layout_width="225dp"
+    android:layout_height="wrap_content"
+    android:background="@drawable/shape_media_opt_bg"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tv_networkHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:text="@string/network_hint"
+        android:gravity="center"
+        android:layout_marginTop="10dp"/>
+
+    <TextView
+        android:id="@+id/tv_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_hint_btn_bg"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:text="@string/continue_play"
+        android:layout_below="@+id/tv_networkHint"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="20dp"
+        android:padding="5dp"/>
+
+    <TextView
+        android:id="@+id/tv_stop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_hint_btn_bg"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        android:text="@string/stop_play"
+        android:layout_below="@+id/tv_networkHint"
+        android:layout_marginRight="20dp"
+        android:layout_marginTop="15dp"
+        android:padding="5dp"
+        android:layout_alignRight="@+id/tv_networkHint"/>
+</RelativeLayout>

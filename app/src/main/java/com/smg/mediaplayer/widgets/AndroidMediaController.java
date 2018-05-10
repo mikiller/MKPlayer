@@ -95,7 +95,7 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
                     AnimUtils.startAlphaAnim(rdg_definition, 1f,  0f, 150);
                     postDelayed(mFadeOut, sDefaultTimeout);
                 }else{
-                    AnimUtils.startAlphaAnim(rdg_definition, 0f, 1f, 150);
+                    rdg_definition.setVisibility(VISIBLE);
                     removeCallbacks(mFadeOut);
                 }
             }

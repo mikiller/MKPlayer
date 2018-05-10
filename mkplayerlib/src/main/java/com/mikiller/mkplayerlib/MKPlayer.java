@@ -1,6 +1,7 @@
 package com.mikiller.mkplayerlib;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -52,6 +53,7 @@ public class MKPlayer extends FrameLayout {
     private ProgressBar pgs_load;
     private TextView tv_slideHint;
     private MKMediaController mediaController;
+    private NetWorkHint networkDlg;
     private Map<String, Uri> urlMap = new HashMap<>();
 
     private boolean isFullScreen = false;
@@ -198,6 +200,9 @@ public class MKPlayer extends FrameLayout {
         videoView.setClickable(true);
         setMediaController(new MKMediaController(context, false));
         setPlayerStateListener();
+
+        networkDlg = findViewById(R.id.netWorkHint);
+
     }
 
     @Override
@@ -325,11 +330,28 @@ public class MKPlayer extends FrameLayout {
         urlMap.put(definition, uri);
     }
 
-    public void toggleVideoUri(String definition, int pos){
+    public void toggleVideoUri(String definition, final int pos){
         videoView.setCurrentDefinition(definition);
         videoView.setVideoURI(urlMap.get(definition));
-        videoView.prepareVideo();
-        videoView.seekTo(pos);
+        if(NetWorkUtils.isWifiConnected(getContext())) {
+            videoView.prepareVideo();
+            videoView.seekTo(pos);
+        }else if(NetWorkUtils.isMobileConnected(getContext())){
+            networkDlg.setVisibility(VISIBLE);
+            networkDlg.setBtnClickListener(new NetWorkHint.onBtnClickListener() {
+                @Override
+                public void onStart() {
+                    videoView.prepareVideo();
+                    videoView.seekTo(pos);
+                    mediaController.start();
+                }
+
+                @Override
+                public void onStop() {
+
+                }
+            });
+        }
     }
 
     public void preparedVideo(){
@@ -344,7 +366,9 @@ public class MKPlayer extends FrameLayout {
                 break;
         }
 
+
         toggleVideoUri(rst, 0);
+
     }
 
     public String getDefaultDefinition(){
@@ -359,7 +383,8 @@ public class MKPlayer extends FrameLayout {
     }
 
     public void start(){
-        mediaController.start();
+        if(NetWorkUtils.isWifiConnected(getContext()))
+            mediaController.start();
     }
 
     public void stopPlayback(){

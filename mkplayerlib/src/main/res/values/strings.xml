@@ -6,6 +6,7 @@
     <string name="fmt_light">亮度：%1$d%%</string>
     <string name="network_error">网络异常</string>
     <string name="network_hint">您当前处在移动网络，是否继续播放？</string>
+    <string name="network_err_hint">未检测到网络，请检查网络开关是否开启</string>
     <string name="continue_play">继续播放</string>
     <string name="stop_play">停止播放</string>
 </resources>

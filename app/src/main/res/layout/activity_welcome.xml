@@ -33,7 +33,6 @@
         android:id="@+id/videoPlayer"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_above="@+id/table"
         android:background="@android:color/black"/>
 
     <TableLayout
@@ -47,5 +46,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="打开相册"
-        android:layout_alignParentBottom="true"/>
+        android:layout_alignParentBottom="true"
+        android:visibility="gone"/>
 </RelativeLayout>

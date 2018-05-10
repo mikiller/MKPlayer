@@ -33,14 +33,6 @@ import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
 
 public class WelcomeActivity extends BaseActivity {
-    /** 产品密钥ID，产品标识 */
-    private final static String SECRETID = "608bb66316e949abc4b2f3dcb8c0db1c";
-    /** 产品私有密钥，服务端生成签名信息使用，请严格保管，避免泄露 */
-    private final static String SECRETKEY = "36b892904788c1d39d39c7780b015937";
-    /** 业务ID，易盾根据产品业务特点分配 */
-    private final static String BUSINESSID = "97e91f0a5954d53599c3e57658b6e8b6";
-    /** 易盾反垃圾云服务文本在线检测接口地址 */
-    private final static String API_URL = "https://as.dun.163yun.com/v3/text/check";
 //    private ImageView iv_preview;
     private Button btn_gallery;
     @BindView(R.id.videoPlayer)
