@@ -461,7 +461,11 @@ public class MKPlayer extends FrameLayout {
             @Override
             public void onError(IMediaPlayer mp, int framework_err, int impl_err) {
                 Log.e(TAG, "on error, " + framework_err + ", " + impl_err);
-                onNetworkError();
+                if(framework_err == -10000){
+                    Toast.makeText(getContext(), R.string.url_err, Toast.LENGTH_SHORT).show();
+                }else {
+                    onNetworkError();
+                }
                 if(mediaController != null)
                     mediaController.hide();
             }

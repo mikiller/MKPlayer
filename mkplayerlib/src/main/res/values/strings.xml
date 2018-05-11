@@ -9,4 +9,5 @@
     <string name="network_err_hint">未检测到网络，请检查网络开关是否开启</string>
     <string name="continue_play">继续播放</string>
     <string name="stop_play">停止播放</string>
+    <string name="url_err">当前视频地址无法访问</string>
 </resources>
