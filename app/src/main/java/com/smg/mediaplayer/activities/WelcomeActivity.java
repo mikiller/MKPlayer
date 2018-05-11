@@ -84,6 +84,7 @@ public class WelcomeActivity extends BaseActivity {
         video.setVideoUri(MKPlayer.SD, Uri.parse("http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/SD/movie_index.m3u8"));
         video.setVideoUri(MKPlayer.HD, Uri.parse("http://flv2.bn.netease.com/videolib3/1611/28/GbgsL3639/HD/movie_index.m3u8"));
         video.preparedVideo();
+        video.setNeedDanmaku(true);
         mediaController.setDefinitions(MKPlayer.SD, MKPlayer.HD);
         mediaController.setDefaultDefinition(video.getDefaultDefinition());
         video.start();

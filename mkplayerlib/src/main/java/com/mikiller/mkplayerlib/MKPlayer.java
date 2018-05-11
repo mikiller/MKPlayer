@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -27,10 +28,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.mikiller.danmakulib.BiliDanmukuParser;
 import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
 import com.mikiller.utils.NetWorkUtils;
 import com.uilib.utils.DisplayUtil;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,6 +41,23 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import master.flame.danmaku.controller.DrawHandler;
+import master.flame.danmaku.controller.IDanmakuView;
+import master.flame.danmaku.danmaku.loader.ILoader;
+import master.flame.danmaku.danmaku.loader.IllegalDataException;
+import master.flame.danmaku.danmaku.loader.android.DanmakuLoaderFactory;
+import master.flame.danmaku.danmaku.model.BaseDanmaku;
+import master.flame.danmaku.danmaku.model.DanmakuTimer;
+import master.flame.danmaku.danmaku.model.Duration;
+import master.flame.danmaku.danmaku.model.IDanmakus;
+import master.flame.danmaku.danmaku.model.IDisplayer;
+import master.flame.danmaku.danmaku.model.android.BaseCacheStuffer;
+import master.flame.danmaku.danmaku.model.android.DanmakuContext;
+import master.flame.danmaku.danmaku.model.android.Danmakus;
+import master.flame.danmaku.danmaku.model.android.SpannedCacheStuffer;
+import master.flame.danmaku.danmaku.parser.BaseDanmakuParser;
+import master.flame.danmaku.danmaku.parser.IDataSource;
+import master.flame.danmaku.ui.widget.DanmakuView;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 
@@ -58,10 +78,24 @@ public class MKPlayer extends FrameLayout {
     private NetWorkHint networkDlg;
     private Map<String, Uri> urlMap = new HashMap<>();
 
-    private boolean isFullScreen = false;
+    private boolean isFullScreen = false, needDanmaku = false;
     private int mScreenUiVisibility;
     private int fullHeight, mInterruptPosition;
     private ViewGroup.LayoutParams originLp;
+
+    //弹幕系列
+    private IDanmakuView dmkView;
+    private BaseCacheStuffer.Proxy stuffProxy = new BaseCacheStuffer.Proxy() {
+        @Override
+        public void prepareDrawing(BaseDanmaku danmaku, boolean fromWorkerThread) {
+
+        }
+
+        @Override
+        public void releaseResource(BaseDanmaku danmaku) {
+
+        }
+    };
 
     private GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener(){
         // 是否声音控制,默认为亮度控制，true为声音控制，false为亮度控制
@@ -198,13 +232,141 @@ public class MKPlayer extends FrameLayout {
         iv_thumb = findViewById(R.id.iv_thumb);
         pgs_load = findViewById(R.id.pgs_loading);
         tv_slideHint = findViewById(R.id.tv_slideHint);
+        dmkView = findViewById(R.id.danmaku);
+
+        initVideoView(context);
+        networkDlg = findViewById(R.id.netWorkHint);
+        initDanmaku();
+    }
+
+    private void initVideoView(Context context){
         videoView.setOnTouchListener(touchListener);
         videoView.setClickable(true);
         setMediaController(new MKMediaController(context, false));
         setPlayerStateListener();
+    }
 
-        networkDlg = findViewById(R.id.netWorkHint);
+    private void initDanmaku(){
+        if(dmkView != null){
+            dmkView.prepare(createParser(null), DanmakuContext.create()
+                    .setDanmakuStyle(IDisplayer.DANMAKU_STYLE_DEFAULT, 3)
+                    .setDuplicateMergingEnabled(false) //设置是否合并重复弹幕
+                    .setCacheStuffer(new SpannedCacheStuffer(), stuffProxy)/*设置图文绘制器*/);
+            configDmkContext(false);
+            dmkView.showFPS(false);
+            dmkView.enableDanmakuDrawingCache(true);
+            dmkView.setCallback(new DrawHandler.Callback() {
+                @Override
+                public void prepared() {
+                    dmkView.start();
+                }
 
+                @Override
+                public void updateTimer(DanmakuTimer timer) {
+                }
+
+                @Override
+                public void danmakuShown(BaseDanmaku danmaku) {
+                }
+
+                @Override
+                public void drawingFinished() {
+
+                }
+            });
+//            dmkView.setOnDanmakuClickListener(new IDanmakuView.OnDanmakuClickListener() {
+//                @Override
+//                public boolean onDanmakuClick(IDanmakus danmakus) {
+//                    return false;
+//                }
+//
+//                @Override
+//                public boolean onDanmakuLongClick(IDanmakus danmakus) {
+//                    return false;
+//                }
+//
+//                @Override
+//                public boolean onViewClick(IDanmakuView view) {
+//                    //for test
+//                    addDanmaku();
+//                    return true;
+//                }
+//            });
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    addDanmaku();
+                }
+            }, 0, 100);
+        }
+    }
+
+    private BaseDanmakuParser createParser(InputStream stream){
+        if (stream == null) {
+            return new BaseDanmakuParser() {
+
+                @Override
+                protected Danmakus parse() {
+                    return new Danmakus();
+                }
+            };
+        }
+
+        ILoader loader = DanmakuLoaderFactory.create(DanmakuLoaderFactory.TAG_BILI);
+
+        try {
+            loader.load(stream);
+        } catch (IllegalDataException e) {
+            e.printStackTrace();
+        }
+        BaseDanmakuParser parser = new BiliDanmukuParser();
+        IDataSource<?> dataSource = loader.getDataSource();
+        parser.load(dataSource);
+        return parser;
+    }
+
+    private void configDmkContext(boolean isFullScreen){
+        // 设置最大显示行数
+        HashMap<Integer, Integer> maxLinesPair = new HashMap<Integer, Integer>();
+        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_RL, isFullScreen ? 7 : 5); // 滚动弹幕最大显示5行
+//        maxLinesPair.put(BaseDanmaku.TYPE_SCROLL_LR, 2);
+//        maxLinesPair.put(BaseDanmaku.TYPE_FIX_BOTTOM, 3);
+//        maxLinesPair.put(BaseDanmaku.TYPE_FIX_TOP, 4);
+
+        // 设置是否禁止重叠
+        HashMap<Integer, Boolean> overlappingEnablePair = new HashMap<Integer, Boolean>();
+        overlappingEnablePair.put(BaseDanmaku.TYPE_SCROLL_RL, true);
+        overlappingEnablePair.put(BaseDanmaku.TYPE_FIX_TOP, true);
+        dmkView.getConfig().setScaleTextSize(isFullScreen ? 1.5f : 1f)
+                .setDanmakuMargin(isFullScreen ? 30 : 20)
+                .setScrollSpeedFactor(isFullScreen ? 1.2f : 1.4f)
+                .setMaximumLines(maxLinesPair)
+                .preventOverlapping(overlappingEnablePair);
+    }
+
+    public void addDanmaku(){
+        BaseDanmaku danmaku = dmkView.getConfig().mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
+        if (danmaku == null || dmkView == null) {
+            return;
+        }
+        // for(int i=0;i<100;i++){
+        // }
+        danmaku.text = "这是一条弹幕" + System.nanoTime();
+        danmaku.padding = 5;
+        danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
+        danmaku.isLive = true;
+        danmaku.setTime(dmkView.getCurrentTime() + 1200);
+        danmaku.textSize = 25f /** (mParser.getDisplayer().getDensity() - 0.6f)*/;
+        danmaku.textColor = Color.RED;
+        danmaku.textShadowColor = Color.WHITE;
+        // danmaku.underlineColor = Color.GREEN;
+        danmaku.borderColor = Color.GREEN;
+        dmkView.addDanmaku(danmaku);
+    }
+
+    public void setNeedDanmaku(boolean isNeed){
+        needDanmaku = isNeed;
+        dmkView.setVisibility(isNeed ? VISIBLE : GONE);
     }
 
     @Override
@@ -247,6 +409,7 @@ public class MKPlayer extends FrameLayout {
         isFullScreen = isFull;
         changeViewHeight(isFull);
         mediaController.onFullScreen(isFull);
+        configDmkContext(isFull);
     }
 
     private void changeViewHeight(boolean isFull){
