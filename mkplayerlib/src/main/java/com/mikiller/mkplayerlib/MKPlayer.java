@@ -58,7 +58,7 @@ public class MKPlayer extends FrameLayout {
 
     private boolean isFullScreen = false;
     private int mScreenUiVisibility;
-    private int fullHeight;
+    private int fullHeight, mInterruptPosition;
     private ViewGroup.LayoutParams originLp;
 
     private GestureDetector gestureDetector = new GestureDetector(getContext(), new GestureDetector.SimpleOnGestureListener(){
@@ -286,8 +286,12 @@ public class MKPlayer extends FrameLayout {
     }
 
     public void toggleMediaControlsVisiblity() {
-        if(!videoView.isInPlaybackState() || mediaController == null)
+        if(!videoView.isInPlaybackState() || mediaController == null) {
+            if(!NetWorkUtils.isWifiConnected(getContext()) && NetWorkUtils.isMobileConnected(getContext())){
+                showNetWorkDlg(videoView.getCurrentPosition());
+            }
             return;
+        }
         if (mediaController.isShowing()) {
             mediaController.hide();
         } else {
@@ -330,27 +334,14 @@ public class MKPlayer extends FrameLayout {
         urlMap.put(definition, uri);
     }
 
-    public void toggleVideoUri(String definition, final int pos){
+    public void toggleVideoUri(String definition, int pos){
         videoView.setCurrentDefinition(definition);
         videoView.setVideoURI(urlMap.get(definition));
         if(NetWorkUtils.isWifiConnected(getContext())) {
             videoView.prepareVideo();
             videoView.seekTo(pos);
         }else if(NetWorkUtils.isMobileConnected(getContext())){
-            networkDlg.setVisibility(VISIBLE);
-            networkDlg.setBtnClickListener(new NetWorkHint.onBtnClickListener() {
-                @Override
-                public void onStart() {
-                    videoView.prepareVideo();
-                    videoView.seekTo(pos);
-                    mediaController.start();
-                }
-
-                @Override
-                public void onStop() {
-
-                }
-            });
+            showNetWorkDlg(pos);
         }
     }
 
@@ -365,10 +356,23 @@ public class MKPlayer extends FrameLayout {
             if(key.equals(videoView.getCurrentDefinition()))
                 break;
         }
-
-
         toggleVideoUri(rst, 0);
+    }
 
+    public void showNetWorkDlg(final int pos){
+        mInterruptPosition = pos;
+        networkDlg.setVisibility(VISIBLE);
+        networkDlg.setBtnClickListener(new NetWorkHint.onBtnClickListener() {
+            @Override
+            public void onStart() {
+                resume(pos);
+            }
+
+            @Override
+            public void onStop() {
+
+            }
+        });
     }
 
     public String getDefaultDefinition(){
@@ -382,9 +386,19 @@ public class MKPlayer extends FrameLayout {
         return 0;
     }
 
+    public int getInterruptPosition(){
+        return mInterruptPosition;
+    }
+
     public void start(){
         if(NetWorkUtils.isWifiConnected(getContext()))
             mediaController.start();
+    }
+
+    public void resume(int pos){
+        videoView.prepareVideo();
+        videoView.seekTo(pos);
+        mediaController.start();
     }
 
     public void stopPlayback(){
@@ -416,6 +430,8 @@ public class MKPlayer extends FrameLayout {
             @Override
             public void onStart() {
                 iv_thumb.setVisibility(GONE);
+                if(networkDlg.getVisibility() == VISIBLE)
+                    networkDlg.setVisibility(GONE);
             }
 
             @Override
@@ -442,7 +458,7 @@ public class MKPlayer extends FrameLayout {
         boolean rst = false;
         if (videoView.getDuration() == -1 ||
                 (videoView.getInterruptPosition() + INTERVAL_TIME < videoView.getDuration())) {
-            final int mInterruptPosition = videoView.getInterruptPosition();
+            mInterruptPosition = videoView.getInterruptPosition();
             pgs_load.setVisibility(VISIBLE);
             Toast.makeText(getContext(), R.string.network_error, Toast.LENGTH_SHORT).show();
             rst = true;

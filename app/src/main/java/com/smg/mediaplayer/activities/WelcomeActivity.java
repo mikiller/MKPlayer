@@ -1,9 +1,13 @@
 package com.smg.mediaplayer.activities;
 
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +15,7 @@ import android.widget.Button;
 
 import com.mikiller.mkplayerlib.MKPlayer;
 import com.mikiller.mkplayerlib.MKVideoView;
+import com.mikiller.mkplayerlib.NetWorkReceiver;
 import com.smg.mediaplayer.R;
 import com.smg.mediaplayer.base.BaseActivity;
 import com.smg.mediaplayer.logic.SafeLogic;
@@ -162,16 +167,37 @@ public class WelcomeActivity extends BaseActivity {
         }
     }
 
+    NetWorkReceiver receiver;
     @Override
     protected void onResume() {
         super.onResume();
-        //video.start();
+        if(receiver == null)
+            receiver = new NetWorkReceiver(new NetWorkReceiver.OnNetWorkChangedListener() {
+                @Override
+                public void isMobileConnected() {
+                    if(video.isPlaying()) {
+                        video.showNetWorkDlg(video.getCurrentPosition());
+                        video.pausePlayback();
+                    }
+                }
+
+                @Override
+                public void isWifiConnected() {
+                    if(!video.isPlaying()) {
+                        video.resume(video.getInterruptPosition());
+                    }
+                }
+            });
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(receiver, filter);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-//        video.stopPlayback();
+        if(receiver != null)
+            unregisterReceiver(receiver);
 
     }
 

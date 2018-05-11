@@ -682,18 +682,6 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         }
     }
 
-    /**
-     * add
-     * 获取中断的进度
-     * @return  进度
-     */
-    public int getInterruptPosition() {
-        if (mMediaPlayer != null) {
-            return (int) Math.max(0, mMediaPlayer.getCurrentPosition());
-        }
-        return 0;
-    }
-
     public void release(boolean cleartargetstate) {
         if (mMediaPlayer != null) {
             mMediaPlayer.release();
@@ -750,6 +738,19 @@ public class MKVideoView extends FrameLayout implements MediaController.MediaPla
         }
         return 0;
     }
+
+    /**
+     * add
+     * 获取中断的进度
+     * @return  进度
+     */
+    public int getInterruptPosition() {
+        if (mMediaPlayer != null) {
+            return (int) Math.max(0, mMediaPlayer.getCurrentPosition());
+        }
+        return 0;
+    }
+
 
     @Override
     public void seekTo(int pos) {
