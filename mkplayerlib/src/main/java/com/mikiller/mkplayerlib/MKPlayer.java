@@ -31,7 +31,9 @@ import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
 import com.mikiller.utils.NetWorkUtils;
 import com.uilib.utils.DisplayUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -251,7 +253,7 @@ public class MKPlayer extends FrameLayout {
         if(isFull) {
             RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, fullHeight);
             setLayoutParams(lp);
-        }else
+        }else if(originLp != null)
             setLayoutParams(originLp);
     }
 
@@ -327,11 +329,19 @@ public class MKPlayer extends FrameLayout {
     }
 
     public void setThumb(String url){
-        GlideImageLoader.getInstance().loadImage(getContext(), url, R.mipmap.placeholder, iv_thumb, 0);
+        GlideImageLoader.getInstance().loadImage(getContext(), url, android.R.color.black, iv_thumb, 0);
     }
 
     public void setVideoUri(String definition, Uri uri){
         urlMap.put(definition, uri);
+    }
+
+    public boolean hasUrl(){
+        return urlMap.size() > 0;
+    }
+
+    public List<String> getSupportDefinitions(){
+        return new ArrayList<>(urlMap.keySet());
     }
 
     public void toggleVideoUri(String definition, int pos){
@@ -409,6 +419,10 @@ public class MKPlayer extends FrameLayout {
         videoView.release(false);
     }
 
+    public void hideLoadPgs(){
+        pgs_load.setVisibility(GONE);
+    }
+
     private void setPlayerStateListener(){
         videoView.setVideoStateListener(new MKVideoView.VideoViewStateListener(){
             @Override
@@ -424,7 +438,7 @@ public class MKPlayer extends FrameLayout {
             @Override
             public void onOpenVideo() {
                 pgs_load.setVisibility(GONE);
-                iv_thumb.setVisibility(VISIBLE);
+                //iv_thumb.setVisibility(VISIBLE);
             }
 
             @Override
