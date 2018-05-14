@@ -8,44 +8,128 @@
     tools:context="com.smg.mediaplayer.activities.WelcomeActivity">
 
     <!--<TextView-->
-        <!--android:id="@+id/hello"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:text="Hello World!" />-->
+    <!--android:id="@+id/hello"-->
+    <!--android:layout_width="wrap_content"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:text="Hello World!" />-->
 
     <!--<ImageView-->
-        <!--android:id="@+id/iv_preview"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_below="@id/hello"-->
-        <!--android:layout_above="@+id/btn_gallery"-->
-        <!--android:background="#88000000"-->
-        <!--android:scaleType="centerCrop"/>-->
+    <!--android:id="@+id/iv_preview"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"-->
+    <!--android:layout_below="@id/hello"-->
+    <!--android:layout_above="@+id/btn_gallery"-->
+    <!--android:background="#88000000"-->
+    <!--android:scaleType="centerCrop"/>-->
 
     <!--<com.mikiller.mkplayerlib.MKVideoView-->
-        <!--android:id="@+id/video"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="200dp"-->
-        <!--android:layout_above="@+id/table"-->
-        <!--android:translationZ="50dp"-->
-        <!--android:background="@android:color/black"/>-->
+    <!--android:id="@+id/video"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="200dp"-->
+    <!--android:layout_above="@+id/table"-->
+    <!--android:translationZ="50dp"-->
+    <!--android:background="@android:color/black"/>-->
     <com.mikiller.mkplayerlib.MKPlayer
         android:id="@+id/videoPlayer"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:background="@android:color/black"/>
+        android:background="@android:color/black" />
+
+    <com.smg.mediaplayer.widgets.DanmakuEditor
+        android:id="@+id/edt_dmk"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_below="@+id/videoPlayer"/>
+
+    <!--<LinearLayout-->
+        <!--android:id="@+id/ll_danmaku"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="200dp"-->
+        <!--android:orientation="vertical"-->
+        <!--android:layout_below="@+id/videoPlayer">-->
+
+        <!--<LinearLayout-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="horizontal">-->
+
+            <!--<android.support.design.widget.TextInputLayout-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="3">-->
+
+                <!--<android.support.design.widget.TextInputEditText-->
+                    <!--android:id="@+id/edt_danmaku"-->
+                    <!--android:layout_width="match_parent"-->
+                    <!--android:layout_height="wrap_content"-->
+                    <!--android:hint="发送弹幕" />-->
+            <!--</android.support.design.widget.TextInputLayout>-->
+
+            <!--<Button-->
+                <!--android:id="@+id/btn_send"-->
+                <!--android:layout_width="0dp"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:layout_weight="1"-->
+                <!--android:text="发送" />-->
+        <!--</LinearLayout>-->
+
+        <!--<RadioGroup-->
+            <!--android:id="@+id/rdg_dmkStyle"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"-->
+            <!--android:orientation="horizontal"-->
+            <!--android:visibility="gone">-->
+
+            <!--<RadioButton-->
+                <!--android:id="@+id/rdb1"-->
+                <!--android:layout_width="50dp"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:tag="dmk_red"-->
+                <!--android:button="@null"-->
+                <!--android:layout_margin="10dp"-->
+                <!--android:background="@drawable/shape_danmaku1"-->
+                <!--android:checked="true"/>-->
+
+            <!--<RadioButton-->
+                <!--android:id="@+id/rdb2"-->
+                <!--android:layout_width="50dp"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:tag="dmk_white"-->
+                <!--android:button="@null"-->
+                <!--android:layout_margin="10dp"-->
+                <!--android:background="@drawable/shape_danmaku2"/>-->
+
+            <!--<RadioButton-->
+                <!--android:id="@+id/rdb3"-->
+                <!--android:layout_width="50dp"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:tag="dmk_green"-->
+                <!--android:button="@null"-->
+                <!--android:layout_margin="10dp"-->
+                <!--android:background="@drawable/shape_danmaku3"/>-->
+
+            <!--<RadioButton-->
+                <!--android:id="@+id/rdb4"-->
+                <!--android:layout_width="50dp"-->
+                <!--android:layout_height="50dp"-->
+                <!--android:tag="dmk_orange"-->
+                <!--android:button="@null"-->
+                <!--android:layout_margin="10dp"-->
+                <!--android:background="@drawable/shape_danmaku4"/>-->
+        <!--</RadioGroup>-->
+    <!--</LinearLayout>-->
 
     <TableLayout
         android:id="@+id/table"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/btn_gallery"/>
+        android:layout_above="@+id/btn_gallery" />
 
     <Button
         android:id="@+id/btn_gallery"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="打开相册"
         android:layout_alignParentBottom="true"
-        android:visibility="gone"/>
+        android:text="打开相册"
+        android:visibility="gone" />
 </RelativeLayout>

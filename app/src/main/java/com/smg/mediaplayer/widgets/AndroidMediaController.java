@@ -41,7 +41,7 @@ import tv.danmaku.ijk.media.viewlib.widget.media.IMediaController;
 public class AndroidMediaController extends MKMediaController implements IMediaController {
     private RelativeLayout rl_controllerTop;
     private ImageButton btn_return;
-    private TextView btn_definition;
+    private TextView btn_definition, btn_danmaku;
     private RadioGroup rdg_definition;
     private TitleBar titleBar;
 
@@ -80,6 +80,7 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
         rl_controllerTop = v.findViewById(R.id.rl_controllerTop);
         btn_return = v.findViewById(R.id.btn_return);
         btn_definition = v.findViewById(R.id.btn_definition);
+        btn_danmaku = v.findViewById(R.id.btn_danmaku);
         rdg_definition = v.findViewById(R.id.rdg_definition);
 
         btn_return.setOnClickListener(new OnClickListener() {
@@ -98,6 +99,13 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
                     rdg_definition.setVisibility(VISIBLE);
                     removeCallbacks(mFadeOut);
                 }
+            }
+        });
+        btn_danmaku.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(customListener != null)
+                    customListener.onClick(v);
             }
         });
 
@@ -125,6 +133,10 @@ public class AndroidMediaController extends MKMediaController implements IMediaC
 
     public void setDefaultDefinition(String definition){
         btn_definition.setText(((RadioButton)rdg_definition.findViewWithTag(definition)).getText().toString());
+    }
+
+    public void setNeedDanmaku(boolean isNeed){
+        btn_danmaku.setVisibility(isNeed ? VISIBLE : GONE);
     }
 
     @Override

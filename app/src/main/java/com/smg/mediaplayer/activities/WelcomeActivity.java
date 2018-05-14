@@ -9,9 +9,13 @@ import android.net.Network;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.design.widget.TextInputEditText;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.RelativeLayout;
 
 import com.mikiller.mkplayerlib.MKPlayer;
 import com.mikiller.mkplayerlib.MKVideoView;
@@ -21,6 +25,7 @@ import com.smg.mediaplayer.base.BaseActivity;
 import com.smg.mediaplayer.logic.SafeLogic;
 import com.smg.mediaplayer.utils.SignatureUtils;
 import com.smg.mediaplayer.widgets.AndroidMediaController;
+import com.smg.mediaplayer.widgets.DanmakuEditor;
 import com.uilib.mxgallery.utils.GalleryMediaUtils;
 import com.uilib.mxgallery.widgets.MXGallery;
 import com.uilib.utils.DisplayUtil;
@@ -33,6 +38,7 @@ import java.util.Map;
 import java.util.Random;
 
 import butterknife.BindView;
+import butterknife.BindViews;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkTimedText;
@@ -42,6 +48,12 @@ public class WelcomeActivity extends BaseActivity {
     private Button btn_gallery;
     @BindView(R.id.videoPlayer)
     MKPlayer video;
+    @BindView(R.id.edt_danmaku)
+    TextInputEditText edt_danmaku;
+    @BindView(R.id.edt_dmk)
+    DanmakuEditor edt_dmk;
+
+    RelativeLayout.LayoutParams dmkLp;
 //    @BindView(R.id.table)
 //    TableLayout tab;
     private AndroidMediaController mediaController;
@@ -78,6 +90,12 @@ public class WelcomeActivity extends BaseActivity {
                         switchDefinition(extra);
                         video.start();
                         break;
+                    case R.id.btn_danmaku:
+//                        dmkLp.addRule(RelativeLayout.BELOW, R.id.videoPlayer);
+                        video.pause();
+                        video.toggleMediaControlsVisiblity();
+                        edt_dmk.setVisibility(View.VISIBLE);
+                        break;
                 }
             }
         });
@@ -87,15 +105,19 @@ public class WelcomeActivity extends BaseActivity {
         video.setNeedDanmaku(true);
         mediaController.setDefinitions(MKPlayer.SD, MKPlayer.HD);
         mediaController.setDefaultDefinition(video.getDefaultDefinition());
+        mediaController.setNeedDanmaku(true);
         video.start();
 
-//        video.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                video.toggleMediaControlsVisiblity();
-//            }
-//        });
-        //video.setHudView(tab);
+        dmkLp = (RelativeLayout.LayoutParams) edt_dmk.getLayoutParams();
+        edt_dmk.setSendListener(new DanmakuEditor.OnSendDanmakuListener() {
+            @Override
+            public void onSend(String txt, String style) {
+                video.addDanmaku(txt, 25f, style);
+                if(video.isFullScreen())
+                    edt_dmk.setVisibility(View.GONE);
+                video.start();
+            }
+        });
 
 
 //        iv_preview = (ImageView) findViewById(R.id.iv_preview);
@@ -111,6 +133,7 @@ public class WelcomeActivity extends BaseActivity {
 //                startActivity(intent);
             }
         });
+
 
 
     }
@@ -139,6 +162,14 @@ public class WelcomeActivity extends BaseActivity {
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         video.configurationChanged(newConfig);
+        if(!video.isFullScreen()){
+            dmkLp.addRule(RelativeLayout.BELOW, R.id.videoPlayer);
+            edt_dmk.setLayoutParams(dmkLp);
+        }else{
+            dmkLp.addRule(RelativeLayout.BELOW, View.NO_ID);
+            edt_dmk.setLayoutParams(dmkLp);
+        }
+        edt_dmk.toggleFullScreen(video.isFullScreen());
     }
 
     @Override

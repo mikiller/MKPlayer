@@ -29,6 +29,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mikiller.danmakulib.BiliDanmukuParser;
+import com.mikiller.danmakulib.DanmakuBuilder;
 import com.mikiller.mkglidelib.imageloader.GlideImageLoader;
 import com.mikiller.utils.NetWorkUtils;
 import com.uilib.utils.DisplayUtil;
@@ -274,30 +275,6 @@ public class MKPlayer extends FrameLayout {
 
                 }
             });
-//            dmkView.setOnDanmakuClickListener(new IDanmakuView.OnDanmakuClickListener() {
-//                @Override
-//                public boolean onDanmakuClick(IDanmakus danmakus) {
-//                    return false;
-//                }
-//
-//                @Override
-//                public boolean onDanmakuLongClick(IDanmakus danmakus) {
-//                    return false;
-//                }
-//
-//                @Override
-//                public boolean onViewClick(IDanmakuView view) {
-//                    //for test
-//                    addDanmaku();
-//                    return true;
-//                }
-//            });
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    addDanmaku();
-                }
-            }, 0, 100);
         }
     }
 
@@ -344,24 +321,13 @@ public class MKPlayer extends FrameLayout {
                 .preventOverlapping(overlappingEnablePair);
     }
 
-    public void addDanmaku(){
-        BaseDanmaku danmaku = dmkView.getConfig().mDanmakuFactory.createDanmaku(BaseDanmaku.TYPE_SCROLL_RL);
-        if (danmaku == null || dmkView == null) {
+    public void addDanmaku(String txt, float txtSize, String style){
+        if (dmkView == null) {
             return;
         }
-        // for(int i=0;i<100;i++){
-        // }
-        danmaku.text = "这是一条弹幕" + System.nanoTime();
-        danmaku.padding = 5;
-        danmaku.priority = 0;  // 可能会被各种过滤器过滤并隐藏显示
-        danmaku.isLive = true;
-        danmaku.setTime(dmkView.getCurrentTime() + 1200);
-        danmaku.textSize = 25f /** (mParser.getDisplayer().getDensity() - 0.6f)*/;
-        danmaku.textColor = Color.RED;
-        danmaku.textShadowColor = Color.WHITE;
-        // danmaku.underlineColor = Color.GREEN;
-        danmaku.borderColor = Color.GREEN;
-        dmkView.addDanmaku(danmaku);
+        DanmakuBuilder dmkBuilder = new DanmakuBuilder().createDanmaku(dmkView.getConfig(), BaseDanmaku.TYPE_SCROLL_RL);
+        dmkBuilder.setText(txt, txtSize).setTime(dmkView.getCurrentTime() + 1200).setStyle(style);
+        dmkView.addDanmaku(dmkBuilder.build());
     }
 
     public void setNeedDanmaku(boolean isNeed){
@@ -566,6 +532,10 @@ public class MKPlayer extends FrameLayout {
     public void start(){
         if(NetWorkUtils.isWifiConnected(getContext()))
             mediaController.start();
+    }
+
+    public void pause(){
+        mediaController.pause();
     }
 
     public void resume(int pos){

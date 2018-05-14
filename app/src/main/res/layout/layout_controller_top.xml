@@ -39,16 +39,32 @@
                 android:textSize="16sp" />
 
             <TextView
+                android:id="@+id/btn_danmaku"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_definition"
+                android:text="发送弹幕"
+                android:gravity="center"
+                android:paddingBottom="4dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:paddingTop="4dp"
+                android:textColor="@android:color/white"
+                android:textSize="12sp"
+                android:layout_marginRight="10dp"
+                android:visibility="gone"/>
+
+            <TextView
                 android:id="@+id/btn_definition"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="10dp"
                 android:background="@drawable/shape_definition"
                 android:gravity="center"
-                android:paddingBottom="2dp"
+                android:paddingBottom="4dp"
                 android:paddingLeft="4dp"
                 android:paddingRight="4dp"
-                android:paddingTop="2dp"
+                android:paddingTop="4dp"
                 android:textColor="@android:color/white"
                 android:textSize="12sp" />
         </LinearLayout>
